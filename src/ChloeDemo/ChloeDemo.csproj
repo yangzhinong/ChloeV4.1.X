@@ -25,10 +25,6 @@
     <ProjectReference Include="..\Chloe.Extension\Chloe.Extension.csproj" />
     <ProjectReference Include="..\Chloe.Oracle\Chloe.Oracle.csproj" />
     <ProjectReference Include="..\Chloe\Chloe.csproj" />
-    <ProjectReference Include="..\Chloe.MySql\Chloe.MySql.csproj" />
-    <ProjectReference Include="..\Chloe.SQLite\Chloe.SQLite.csproj" />
-    <ProjectReference Include="..\Chloe.SqlServer\Chloe.SqlServer.csproj" />
-    <ProjectReference Include="..\Chloe.PostgreSQL\Chloe.PostgreSQL.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

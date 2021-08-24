@@ -15,7 +15,7 @@ namespace Database
 
         public static DbConnection CreateConnection()
         {
-            SqlConnection conn = new SqlConnection(ConnectionString);
+            SqlConnection conn = new OracleInternal(ConnectionString);
             return conn;
         }
     }
