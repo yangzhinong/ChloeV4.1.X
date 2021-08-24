@@ -2,8 +2,8 @@
 -- ----------------------------
 -- Table structure for CITY
 -- ----------------------------
-DROP TABLE "SYSTEM"."CITY";
-CREATE TABLE "SYSTEM"."CITY" (
+DROP TABLE "YZN"."CITY";
+CREATE TABLE "YZN"."CITY" (
 "ID" NUMBER NOT NULL ,
 "NAME" NVARCHAR2(255) NULL ,
 "PROVINCEID" NUMBER NULL 
@@ -21,20 +21,20 @@ NOCACHE
 -- ----------------------------
 -- Checks structure for table CITY
 -- ----------------------------
-ALTER TABLE "SYSTEM"."CITY" ADD CHECK ("ID" IS NOT NULL);
+ALTER TABLE "YZN"."CITY" ADD CHECK ("ID" IS NOT NULL);
 
 -- ----------------------------
 -- Primary Key structure for table CITY
 -- ----------------------------
-ALTER TABLE "SYSTEM"."CITY" ADD PRIMARY KEY ("ID");
+ALTER TABLE "YZN"."CITY" ADD PRIMARY KEY ("ID");
 
 
 
 -- ----------------------------
 -- Table structure for USERS
 -- ----------------------------
-DROP TABLE "SYSTEM"."USERS";
-CREATE TABLE "SYSTEM"."USERS" (
+DROP TABLE "YZN"."USERS";
+CREATE TABLE "YZN"."USERS" (
 "ID" NUMBER NOT NULL ,
 "NAME" NVARCHAR2(255) NULL ,
 "AGE" NUMBER NULL ,
@@ -49,16 +49,16 @@ NOCACHE
 ;
 
 
-ALTER TABLE "SYSTEM"."USERS" ADD CHECK ("ID" IS NOT NULL);
+ALTER TABLE "YZN"."USERS" ADD CHECK ("ID" IS NOT NULL);
 
 
-ALTER TABLE "SYSTEM"."USERS" ADD PRIMARY KEY ("ID");
+ALTER TABLE "YZN"."USERS" ADD PRIMARY KEY ("ID");
 
 -- ----------------------------
 -- Sequence structure for USERS_AUTOID
 -- ----------------------------
-DROP SEQUENCE "SYSTEM"."USERS_AUTOID";
-CREATE SEQUENCE "SYSTEM"."USERS_AUTOID"
+DROP SEQUENCE "YZN"."USERS_AUTOID";
+CREATE SEQUENCE "YZN"."USERS_AUTOID"
  INCREMENT BY 1
  MINVALUE 1
  MAXVALUE 9999999999999999999999999999
@@ -75,8 +75,8 @@ end;
 -- ----------------------------
 -- Table structure for PROVINCE
 -- ----------------------------
-DROP TABLE "SYSTEM"."PROVINCE";
-CREATE TABLE "SYSTEM"."PROVINCE" (
+DROP TABLE "YZN"."PROVINCE";
+CREATE TABLE "YZN"."PROVINCE" (
 "ID" NUMBER NOT NULL ,
 "NAME" NVARCHAR2(255) NULL 
 )
@@ -84,9 +84,9 @@ LOGGING
 NOCOMPRESS
 NOCACHE
 
-ALTER TABLE "SYSTEM"."PROVINCE" ADD CHECK ("ID" IS NOT NULL);
+ALTER TABLE "YZN"."PROVINCE" ADD CHECK ("ID" IS NOT NULL);
 
-ALTER TABLE "SYSTEM"."PROVINCE" ADD PRIMARY KEY ("ID");
+ALTER TABLE "YZN"."PROVINCE" ADD PRIMARY KEY ("ID");
 
 
 CREATE OR REPLACE 

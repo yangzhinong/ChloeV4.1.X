@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chloe", "Chloe\Chloe.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChloeDemo", "ChloeDemo\ChloeDemo.csproj", "{D1F183ED-D321-45DE-8820-527C057C1878}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChloeTest", "ChloeTest\ChloeTest.csproj", "{8AAEEE32-2AA1-4275-ACD0-15784302A1A2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chloe.Extension", "Chloe.Extension\Chloe.Extension.csproj", "{77057F4F-6811-482E-8FC4-117B088B916C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chloe.Oracle", "Chloe.Oracle\Chloe.Oracle.csproj", "{01834F04-15E7-4206-974B-C269BE1A5486}"
@@ -27,10 +25,6 @@ Global
 		{D1F183ED-D321-45DE-8820-527C057C1878}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1F183ED-D321-45DE-8820-527C057C1878}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1F183ED-D321-45DE-8820-527C057C1878}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8AAEEE32-2AA1-4275-ACD0-15784302A1A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AAEEE32-2AA1-4275-ACD0-15784302A1A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8AAEEE32-2AA1-4275-ACD0-15784302A1A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AAEEE32-2AA1-4275-ACD0-15784302A1A2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{77057F4F-6811-482E-8FC4-117B088B916C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{77057F4F-6811-482E-8FC4-117B088B916C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77057F4F-6811-482E-8FC4-117B088B916C}.Release|Any CPU.ActiveCfg = Release|Any CPU
