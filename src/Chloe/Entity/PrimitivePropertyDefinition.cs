@@ -6,7 +6,7 @@ namespace Chloe.Entity
 {
     public class PrimitivePropertyDefinition : PropertyDefinition
     {
-        public PrimitivePropertyDefinition(PropertyInfo property, DbColumn column, bool isPrimaryKey, bool isAutoIncrement, bool isNullable, bool isRowVersion, string sequenceName, string sequenceSchema, IList<object> annotations) : base(property, annotations)
+        public PrimitivePropertyDefinition(PropertyInfo property, DbColumn column, bool isPrimaryKey, bool isAutoIncrement, bool isNullable, bool isRowVersion, string sequenceName, string sequenceSchema, bool updateIgnore, IList<object> annotations) : base(property, annotations)
         {
             PublicHelper.CheckNull(column, nameof(column));
 
@@ -17,7 +17,9 @@ namespace Chloe.Entity
             this.IsRowVersion = isRowVersion;
             this.SequenceName = sequenceName;
             this.SequenceSchema = sequenceSchema;
+            this.UpdateIgnore = updateIgnore;
         }
+
         public override TypeKind Kind { get { return TypeKind.Primitive; } }
         public DbColumn Column { get; private set; }
         public bool IsPrimaryKey { get; private set; }
@@ -26,5 +28,10 @@ namespace Chloe.Entity
         public bool IsRowVersion { get; private set; }
         public string SequenceName { get; private set; }
         public string SequenceSchema { get; private set; }
+
+        /// <summary>
+        /// 更新忽略
+        /// </summary>
+        public bool UpdateIgnore { get; private set; }
     }
 }

@@ -22,12 +22,13 @@ namespace Chloe
 {
     public abstract partial class DbContext : IDbContext, IDisposable
     {
-        bool _disposed = false;
-        InnerAdoSession _adoSession;
-        DbSession _session;
+        private bool _disposed = false;
+        private InnerAdoSession _adoSession;
+        private DbSession _session;
 
-        Dictionary<Type, TrackEntityCollection> _trackingEntityContainer;
-        Dictionary<Type, TrackEntityCollection> TrackingEntityContainer
+        private Dictionary<Type, TrackEntityCollection> _trackingEntityContainer;
+
+        private Dictionary<Type, TrackEntityCollection> TrackingEntityContainer
         {
             get
             {
@@ -41,6 +42,7 @@ namespace Chloe
         }
 
         internal Dictionary<Type, List<LambdaExpression>> QueryFilters { get; set; } = new Dictionary<Type, List<LambdaExpression>>();
+
         internal InnerAdoSession AdoSession
         {
             get
@@ -51,6 +53,7 @@ namespace Chloe
                 return this._adoSession;
             }
         }
+
         public abstract IDatabaseProvider DatabaseProvider { get; }
 
         protected DbContext()
@@ -79,14 +82,17 @@ namespace Chloe
         {
             return this.Query<TEntity>(null);
         }
+
         public virtual IQuery<TEntity> Query<TEntity>(string table)
         {
             return this.Query<TEntity>(table, LockType.Unspecified);
         }
+
         public virtual IQuery<TEntity> Query<TEntity>(LockType @lock)
         {
             return this.Query<TEntity>(null, @lock);
         }
+
         public virtual IQuery<TEntity> Query<TEntity>(string table, LockType @lock)
         {
             return new Query<TEntity>(this, table, @lock);
@@ -96,10 +102,12 @@ namespace Chloe
         {
             return this.QueryByKey<TEntity>(key, null, tracking);
         }
+
         public virtual TEntity QueryByKey<TEntity>(object key, string table, bool tracking = false)
         {
             return this.QueryByKey<TEntity>(key, table, LockType.Unspecified, tracking);
         }
+
         public virtual TEntity QueryByKey<TEntity>(object key, string table, LockType @lock, bool tracking = false)
         {
             Expression<Func<TEntity, bool>> condition = PrimaryKeyHelper.BuildCondition<TEntity>(key);
@@ -119,6 +127,7 @@ namespace Chloe
 
             return ret;
         }
+
         public virtual IJoinQuery<T1, T2, T3> JoinQuery<T1, T2, T3>(Expression<Func<T1, T2, T3, object[]>> joinInfo)
         {
             KeyValuePairList<JoinType, Expression> joinInfos = ResolveJoinInfo(joinInfo);
@@ -128,6 +137,7 @@ namespace Chloe
 
             return ret;
         }
+
         public virtual IJoinQuery<T1, T2, T3, T4> JoinQuery<T1, T2, T3, T4>(Expression<Func<T1, T2, T3, T4, object[]>> joinInfo)
         {
             KeyValuePairList<JoinType, Expression> joinInfos = ResolveJoinInfo(joinInfo);
@@ -138,6 +148,7 @@ namespace Chloe
 
             return ret;
         }
+
         public virtual IJoinQuery<T1, T2, T3, T4, T5> JoinQuery<T1, T2, T3, T4, T5>(Expression<Func<T1, T2, T3, T4, T5, object[]>> joinInfo)
         {
             KeyValuePairList<JoinType, Expression> joinInfos = ResolveJoinInfo(joinInfo);
@@ -154,11 +165,13 @@ namespace Chloe
         {
             return this.SqlQuery<T>(sql, CommandType.Text, parameters);
         }
+
         public virtual IEnumerable<T> SqlQuery<T>(string sql, CommandType cmdType, params DbParam[] parameters)
         {
             PublicHelper.CheckNull(sql, "sql");
             return new InternalSqlQuery<T>(this, sql, cmdType, parameters);
         }
+
         public IEnumerable<T> SqlQuery<T>(string sql, object parameter)
         {
             /*
@@ -168,6 +181,7 @@ namespace Chloe
 
             return this.SqlQuery<T>(sql, PublicHelper.BuildParams(this, parameter));
         }
+
         public IEnumerable<T> SqlQuery<T>(string sql, CommandType cmdType, object parameter)
         {
             /*
@@ -194,7 +208,8 @@ namespace Chloe
 
             return entity;
         }
-        TEntity Save<TEntity>(TEntity entity, TypeDescriptor declaringTypeDescriptor)
+
+        private TEntity Save<TEntity>(TEntity entity, TypeDescriptor declaringTypeDescriptor)
         {
             this.Insert(entity);
 
@@ -222,7 +237,8 @@ namespace Chloe
 
             return entity;
         }
-        void SaveOneToOne(ComplexPropertyDescriptor navPropertyDescriptor, object owner, TypeDescriptor ownerTypeDescriptor)
+
+        private void SaveOneToOne(ComplexPropertyDescriptor navPropertyDescriptor, object owner, TypeDescriptor ownerTypeDescriptor)
         {
             /*
              * 1:1
@@ -262,7 +278,8 @@ namespace Chloe
             //DbContext.Save(navValue, ownerTypeDescriptor);
             method.Invoke(this, navValue, ownerTypeDescriptor);
         }
-        void SaveCollection(CollectionPropertyDescriptor collectionPropertyDescriptor, object owner, TypeDescriptor ownerTypeDescriptor)
+
+        private void SaveCollection(CollectionPropertyDescriptor collectionPropertyDescriptor, object owner, TypeDescriptor ownerTypeDescriptor)
         {
             PrimitivePropertyDescriptor ownerKeyPropertyDescriptor = ownerTypeDescriptor.PrimaryKeys.FirstOrDefault();
             if (ownerKeyPropertyDescriptor == null)
@@ -296,6 +313,7 @@ namespace Chloe
         {
             return this.Insert(entity, null);
         }
+
         public virtual TEntity Insert<TEntity>(TEntity entity, string table)
         {
             PublicHelper.CheckNull(entity);
@@ -363,10 +381,12 @@ namespace Chloe
             autoIncrementPropertyDescriptor.SetValue(entity, retIdentity);
             return entity;
         }
+
         public virtual object Insert<TEntity>(Expression<Func<TEntity>> content)
         {
             return this.Insert(content, null);
         }
+
         public virtual object Insert<TEntity>(Expression<Func<TEntity>> content, string table)
         {
             PublicHelper.CheckNull(content);
@@ -451,6 +471,7 @@ namespace Chloe
         {
             this.InsertRange(entities, null);
         }
+
         public virtual void InsertRange<TEntity>(List<TEntity> entities, string table)
         {
             throw new NotImplementedException();
@@ -460,6 +481,7 @@ namespace Chloe
         {
             return this.Update(entity, null);
         }
+
         public virtual int Update<TEntity>(TEntity entity, string table)
         {
             PublicHelper.CheckNull(entity);
@@ -482,7 +504,7 @@ namespace Chloe
                     continue;
                 }
 
-                if (propertyDescriptor.IsAutoIncrement || propertyDescriptor.HasSequence() || propertyDescriptor.IsRowVersion)
+                if (propertyDescriptor.CannotUpdate())
                     continue;
 
                 object val = propertyDescriptor.GetValue(entity);
@@ -530,10 +552,12 @@ namespace Chloe
 
             return rowsAffected;
         }
+
         public virtual int Update<TEntity>(Expression<Func<TEntity, bool>> condition, Expression<Func<TEntity, TEntity>> content)
         {
             return this.Update(condition, content, null);
         }
+
         public virtual int Update<TEntity>(Expression<Func<TEntity, bool>> condition, Expression<Func<TEntity, TEntity>> content, string table)
         {
             PublicHelper.CheckNull(condition);
@@ -576,6 +600,7 @@ namespace Chloe
         {
             return this.Delete(entity, null);
         }
+
         public virtual int Delete<TEntity>(TEntity entity, string table)
         {
             PublicHelper.CheckNull(entity);
@@ -611,10 +636,12 @@ namespace Chloe
 
             return rowsAffected;
         }
+
         public virtual int Delete<TEntity>(Expression<Func<TEntity, bool>> condition)
         {
             return this.Delete(condition, null);
         }
+
         public virtual int Delete<TEntity>(Expression<Func<TEntity, bool>> condition, string table)
         {
             PublicHelper.CheckNull(condition);
@@ -631,10 +658,12 @@ namespace Chloe
 
             return this.ExecuteNonQuery(e);
         }
+
         public virtual int DeleteByKey<TEntity>(object key)
         {
             return this.DeleteByKey<TEntity>(key, null);
         }
+
         public virtual int DeleteByKey<TEntity>(object key, string table)
         {
             Expression<Func<TEntity, bool>> condition = PrimaryKeyHelper.BuildCondition<TEntity>(key);
@@ -654,10 +683,12 @@ namespace Chloe
              */
             return new TransientTransaction(this);
         }
+
         public ITransientTransaction BeginTransaction(IsolationLevel il)
         {
             return new TransientTransaction(this, il);
         }
+
         public void UseTransaction(Action action)
         {
             /*
@@ -676,6 +707,7 @@ namespace Chloe
                 tran.Commit();
             }
         }
+
         public void UseTransaction(Action action, IsolationLevel il)
         {
             PublicHelper.CheckNull(action);
@@ -710,10 +742,12 @@ namespace Chloe
 
             collection.TryAddEntity(entity);
         }
+
         protected virtual string GetSelectLastInsertIdClause()
         {
             return "SELECT @@IDENTITY";
         }
+
         protected virtual IEntityState TryGetTrackedEntityState(object entity)
         {
             PublicHelper.CheckNull(entity);
@@ -738,6 +772,7 @@ namespace Chloe
             List<DbParam> parameters;
             return this.ExecuteNonQuery(e, out parameters);
         }
+
         protected int ExecuteNonQuery(DbExpression e, out List<DbParam> parameters)
         {
             IDbExpressionTranslator translator = this.DatabaseProvider.CreateDbExpressionTranslator();
@@ -746,6 +781,7 @@ namespace Chloe
             int rowsAffected = this.Session.ExecuteNonQuery(cmdText, parameters.ToArray());
             return rowsAffected;
         }
+
         protected IDataReader ExecuteReader(DbExpression e)
         {
             IDbExpressionTranslator translator = this.DatabaseProvider.CreateDbExpressionTranslator();
@@ -765,11 +801,12 @@ namespace Chloe
             this.Dispose(true);
             this._disposed = true;
         }
+
         protected virtual void Dispose(bool disposing)
         {
-
         }
-        void CheckDisposed()
+
+        private void CheckDisposed()
         {
             if (this._disposed)
             {
@@ -777,15 +814,17 @@ namespace Chloe
             }
         }
 
-        class TrackEntityCollection
+        private class TrackEntityCollection
         {
             public TrackEntityCollection(TypeDescriptor typeDescriptor)
             {
                 this.TypeDescriptor = typeDescriptor;
                 this.Entities = new Dictionary<object, IEntityState>(1);
             }
+
             public TypeDescriptor TypeDescriptor { get; private set; }
             public Dictionary<object, IEntityState> Entities { get; private set; }
+
             public bool TryAddEntity(object entity)
             {
                 if (this.Entities.ContainsKey(entity))
@@ -798,6 +837,7 @@ namespace Chloe
 
                 return true;
             }
+
             public IEntityState TryGetEntityState(object entity)
             {
                 IEntityState ret;

@@ -18,7 +18,7 @@ namespace Chloe.Entity
             this.ConfigureNavigationProperty();
         }
 
-        void ConfigureTableMapping()
+        private void ConfigureTableMapping()
         {
             var entityAttributes = this.EntityType.Type.GetCustomAttributes();
             foreach (Attribute entityAttribute in entityAttributes)
@@ -35,7 +35,8 @@ namespace Chloe.Entity
                 }
             }
         }
-        void ConfigureColumnMapping()
+
+        private void ConfigureColumnMapping()
         {
             var propertyInfos = this.EntityType.PrimitiveProperties.Select(a => a.Property).ToList();
             foreach (PropertyInfo propertyInfo in propertyInfos)
@@ -48,16 +49,6 @@ namespace Chloe.Entity
                 var propertyAttributes = propertyInfo.GetCustomAttributes();
                 foreach (Attribute propertyAttribute in propertyAttributes)
                 {
-                    if (propertyAttribute is NotMappedAttribute)
-                    {
-                        this.Ignore(propertyInfo.Name);
-                    }
-
-                    if (propertyAttribute is NotNullAttribute)
-                    {
-                        propertyBuilder.IsNullable(false);
-                    }
-
                     propertyBuilder.HasAnnotation(propertyAttribute);
 
                     if (propertyAttribute is ColumnAttribute)
@@ -75,11 +66,30 @@ namespace Chloe.Entity
                         propertyBuilder.HasSize(columnAttribute.GetSize());
                         propertyBuilder.HasScale(columnAttribute.GetScale());
                         propertyBuilder.HasPrecision(columnAttribute.GetPrecision());
+                        continue;
+                    }
+
+                    if (propertyAttribute is NotMappedAttribute)
+                    {
+                        this.Ignore(propertyInfo.Name);
+                        continue;
+                    }
+
+                    if (propertyAttribute is NotNullAttribute)
+                    {
+                        propertyBuilder.IsNullable(false);
+                        continue;
                     }
 
                     if (propertyAttribute is AutoIncrementAttribute)
                     {
                         propertyBuilder.IsAutoIncrement(true);
+                        continue;
+                    }
+                    if (propertyAttribute is UpdateIgnoreAttribute)
+                    {
+                        propertyBuilder.UpdateIgnore(true);
+                        continue;
                     }
 
                     SequenceAttribute sequenceAttribute = propertyAttribute as SequenceAttribute;
@@ -114,7 +124,8 @@ namespace Chloe.Entity
                 }
             }
         }
-        void ConfigureNavigationProperty()
+
+        private void ConfigureNavigationProperty()
         {
             PropertyInfo[] properties = this.EntityType.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(a => a.GetSetMethod() != null && a.GetGetMethod() != null).ToArray();
 
@@ -140,7 +151,7 @@ namespace Chloe.Entity
             }
         }
 
-        bool IsSupportedCollectionType(Type type)
+        private bool IsSupportedCollectionType(Type type)
         {
             if (!type.IsGenericType)
                 return false;

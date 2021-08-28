@@ -9,9 +9,10 @@ namespace Chloe.Entity
         {
             this.Property = property;
         }
+
         public PrimitiveProperty Property { get; private set; }
 
-        IPrimitivePropertyBuilder AsNonGenericBuilder()
+        private IPrimitivePropertyBuilder AsNonGenericBuilder()
         {
             return this;
         }
@@ -21,6 +22,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().MapTo(column);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.MapTo(string column)
         {
             this.Property.ColumnName = column;
@@ -32,6 +34,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().HasAnnotation(value);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.HasAnnotation(object value)
         {
             if (value == null)
@@ -46,6 +49,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().IsPrimaryKey(isPrimaryKey);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.IsPrimaryKey(bool isPrimaryKey)
         {
             this.Property.IsPrimaryKey = isPrimaryKey;
@@ -57,6 +61,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().IsAutoIncrement(isAutoIncrement);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.IsAutoIncrement(bool isAutoIncrement)
         {
             this.Property.IsAutoIncrement = isAutoIncrement;
@@ -74,6 +79,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().IsNullable(isNullable);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.IsNullable(bool isNullable)
         {
             this.Property.IsNullable = isNullable;
@@ -85,6 +91,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().IsRowVersion(isRowVersion);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.IsRowVersion(bool isRowVersion)
         {
             this.Property.IsRowVersion = isRowVersion;
@@ -96,6 +103,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().HasDbType(dbType);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.HasDbType(DbType dbType)
         {
             this.Property.DbType = dbType;
@@ -107,6 +115,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().HasSize(size);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.HasSize(int? size)
         {
             this.Property.Size = size;
@@ -118,6 +127,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().HasScale(scale);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.HasScale(byte? scale)
         {
             this.Property.Scale = scale;
@@ -129,6 +139,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().HasPrecision(precision);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.HasPrecision(byte? precision)
         {
             this.Property.Precision = precision;
@@ -140,6 +151,7 @@ namespace Chloe.Entity
             this.AsNonGenericBuilder().HasSequence(name, schema);
             return this;
         }
+
         IPrimitivePropertyBuilder IPrimitivePropertyBuilder.HasSequence(string name, string schema)
         {
             this.Property.SequenceName = name;
@@ -149,6 +161,18 @@ namespace Chloe.Entity
                 this.Property.IsAutoIncrement = false;
             }
 
+            return this;
+        }
+
+        public IPrimitivePropertyBuilder<TProperty> UpdateIgnore(bool updateIgnore = true)
+        {
+            this.AsNonGenericBuilder().UpdateIgnore(updateIgnore);
+            return this;
+        }
+
+        IPrimitivePropertyBuilder IPrimitivePropertyBuilder.UpdateIgnore(bool updateIgnore)
+        {
+            this.Property.UpdateIgnore = updateIgnore;
             return this;
         }
     }

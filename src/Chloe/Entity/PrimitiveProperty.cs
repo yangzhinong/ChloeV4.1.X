@@ -22,10 +22,11 @@ namespace Chloe.Entity
         public int? Size { get; set; }
         public byte? Scale { get; set; }
         public byte? Precision { get; set; }
+        public bool UpdateIgnore { get; set; }
 
         public PrimitivePropertyDefinition MakeDefinition()
         {
-            PrimitivePropertyDefinition definition = new PrimitivePropertyDefinition(this.Property, new DbColumn(this.ColumnName, this.Property.PropertyType, this.DbType, this.Size, this.Scale, this.Precision), this.IsPrimaryKey, this.IsAutoIncrement, this.IsNullable, this.IsRowVersion, this.SequenceName, this.SequenceSchema, this.Annotations);
+            PrimitivePropertyDefinition definition = new PrimitivePropertyDefinition(this.Property, new DbColumn(this.ColumnName, this.Property.PropertyType, this.DbType, this.Size, this.Scale, this.Precision), this.IsPrimaryKey, this.IsAutoIncrement, this.IsNullable, this.IsRowVersion, this.SequenceName, this.SequenceSchema, this.UpdateIgnore, this.Annotations);
             return definition;
         }
     }

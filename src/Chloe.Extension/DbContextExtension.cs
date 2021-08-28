@@ -39,7 +39,10 @@ namespace Chloe
             ConstantExpression entityConstantExp = Expression.Constant(entity);
             foreach (PrimitivePropertyDescriptor propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
             {
-                if (propertyDescriptor.IsPrimaryKey || propertyDescriptor.IsAutoIncrement)
+                if (propertyDescriptor.CannotUpdate())
+                {
+                    continue;
+                }
                 {
                     continue;
                 }
@@ -68,6 +71,7 @@ namespace Chloe
             List<string> fieldList = FieldsResolver.Resolve(fields);
             return dbContext.UpdateOnly(entity, fieldList.ToArray());
         }
+
         /// <summary>
         /// dbContext.UpdateOnly&lt;User&gt;(user, "Name,Age", "NickName")
         /// </summary>
@@ -122,7 +126,8 @@ namespace Chloe
 
             return UpdateOnly(dbContext, condition, bindings);
         }
-        static int UpdateOnly<TEntity>(this IDbContext dbContext, Expression<Func<TEntity, bool>> condition, List<MemberBinding> bindings)
+
+        private static int UpdateOnly<TEntity>(this IDbContext dbContext, Expression<Func<TEntity, bool>> condition, List<MemberBinding> bindings)
         {
             Type entityType = typeof(TEntity);
             NewExpression newExp = Expression.New(entityType);
@@ -139,20 +144,23 @@ namespace Chloe
         {
             dbContext.Session.BeginTransaction();
         }
+
         public static void BeginTransaction(this IDbContext dbContext, IsolationLevel il)
         {
             dbContext.Session.BeginTransaction(il);
         }
+
         public static void CommitTransaction(this IDbContext dbContext)
         {
             dbContext.Session.CommitTransaction();
         }
+
         public static void RollbackTransaction(this IDbContext dbContext)
         {
             dbContext.Session.RollbackTransaction();
         }
 
-        static T ExecuteAction<T>(IDbContext dbContext, Func<T> action)
+        private static T ExecuteAction<T>(IDbContext dbContext, Func<T> action)
         {
             try
             {

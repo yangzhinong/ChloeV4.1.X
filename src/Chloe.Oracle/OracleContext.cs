@@ -17,21 +17,23 @@ namespace Chloe.Oracle
 {
     public partial class OracleContext : DbContext
     {
-        DatabaseProvider _databaseProvider;
+        private DatabaseProvider _databaseProvider;
+
         public OracleContext(IDbConnectionFactory dbConnectionFactory)
         {
             PublicHelper.CheckNull(dbConnectionFactory);
             this._databaseProvider = new DatabaseProvider(dbConnectionFactory, this);
         }
+
         public OracleContext(Func<IDbConnection> dbConnectionFactory) : this(new DbConnectionFactory(dbConnectionFactory))
         {
         }
-
 
         /// <summary>
         /// 是否将 sql 中的表名/字段名转成大写。默认为 true。
         /// </summary>
         public bool ConvertToUppercase { get; set; } = true;
+
         public override IDatabaseProvider DatabaseProvider
         {
             get { return this._databaseProvider; }
@@ -96,6 +98,7 @@ namespace Chloe.Oracle
 
             return entity;
         }
+
         public override object Insert<TEntity>(Expression<Func<TEntity>> content, string table)
         {
             PublicHelper.CheckNull(content);
@@ -189,6 +192,7 @@ namespace Chloe.Oracle
 
             return keyVal; /* It will return null if an entity does not define primary key. */
         }
+
         public override void InsertRange<TEntity>(List<TEntity> entities, string table)
         {
             /*
@@ -337,7 +341,7 @@ namespace Chloe.Oracle
                     continue;
                 }
 
-                if (propertyDescriptor.IsAutoIncrement || propertyDescriptor.HasSequence() || propertyDescriptor.IsRowVersion)
+                if (propertyDescriptor.CannotUpdate())
                     continue;
 
                 object val = propertyDescriptor.GetValue(entity);
@@ -386,7 +390,7 @@ namespace Chloe.Oracle
             return rowsAffected;
         }
 
-        string AppendInsertRangeSqlTemplate(DbTable table, List<PrimitivePropertyDescriptor> mappingPropertyDescriptors)
+        private string AppendInsertRangeSqlTemplate(DbTable table, List<PrimitivePropertyDescriptor> mappingPropertyDescriptors)
         {
             StringBuilder sqlBuilder = new StringBuilder();
 
@@ -424,14 +428,15 @@ namespace Chloe.Oracle
             return sqlTemplate;
         }
 
-        string AppendTableName(DbTable table)
+        private string AppendTableName(DbTable table)
         {
             if (string.IsNullOrEmpty(table.Schema))
                 return this.QuoteName(table.Name);
 
             return string.Format("{0}.{1}", this.QuoteName(table.Schema), this.QuoteName(table.Name));
         }
-        string QuoteName(string name)
+
+        private string QuoteName(string name)
         {
             if (this.ConvertToUppercase)
                 return string.Concat("\"", name.ToUpper(), "\"");
