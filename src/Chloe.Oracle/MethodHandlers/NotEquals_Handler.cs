@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using Chloe.InternalExtensions;
 using System.Reflection;
 
@@ -16,7 +17,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return true;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             DbExpression left = exp.Arguments[0];
             DbExpression right = exp.Arguments[1];

@@ -1,15 +1,17 @@
 ﻿using Chloe.Core.Visitors;
 using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace Chloe.Oracle
 {
-    class EvaluableDbExpressionTransformer : EvaluableDbExpressionTransformerBase
+    internal class EvaluableDbExpressionTransformer : EvaluableDbExpressionTransformerBase
     {
-        static EvaluableDbExpressionTransformer _transformer = new EvaluableDbExpressionTransformer();
+        private static EvaluableDbExpressionTransformer _transformer = new EvaluableDbExpressionTransformer();
 
-        static HashSet<MemberInfo> _toTranslateMembers = new HashSet<MemberInfo>();
+        private static HashSet<MemberInfo> _toTranslateMembers = new HashSet<MemberInfo>();
+
         static EvaluableDbExpressionTransformer()
         {
             _toTranslateMembers.Add(PublicConstants.PropertyInfo_String_Length);
@@ -42,6 +44,7 @@ namespace Chloe.Oracle
         {
             return _toTranslateMembers.Contains(exp.Member);
         }
+
         public override bool CanTranslateToSql(DbMethodCallExpression exp)
         {
             IMethodHandler methodHandler;

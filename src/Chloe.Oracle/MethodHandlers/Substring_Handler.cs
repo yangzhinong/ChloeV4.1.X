@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 
 namespace Chloe.Oracle.MethodHandlers
 {
@@ -11,7 +12,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return true;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             generator.SqlBuilder.Append("SUBSTR(");
             exp.Object.Accept(generator);

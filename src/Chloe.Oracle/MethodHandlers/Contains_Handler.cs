@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using Chloe.InternalExtensions;
 using System;
 using System.Collections;
@@ -31,7 +32,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return false;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             MethodInfo method = exp.Method;
 
@@ -108,7 +109,7 @@ namespace Chloe.Oracle.MethodHandlers
             In(generator, exps, operand);
         }
 
-        static void Method_String_Contains(DbMethodCallExpression exp, SqlGenerator generator)
+        static void Method_String_Contains(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             exp.Object.Accept(generator);
             generator.SqlBuilder.Append(" LIKE '%' || ");
@@ -116,7 +117,7 @@ namespace Chloe.Oracle.MethodHandlers
             generator.SqlBuilder.Append(" || '%'");
         }
 
-        static void In(SqlGenerator generator, List<DbExpression> elementExps, DbExpression operand)
+        static void In(SqlGeneratorBase generator, List<DbExpression> elementExps, DbExpression operand)
         {
             if (elementExps.Count == 0)
             {
@@ -153,7 +154,7 @@ namespace Chloe.Oracle.MethodHandlers
             if (batches.Count > 1)
                 generator.SqlBuilder.Append(")");
         }
-        static void In(SqlGenerator generator, DbSqlQueryExpression sqlQuery, DbExpression operand)
+        static void In(SqlGeneratorBase generator, DbSqlQueryExpression sqlQuery, DbExpression operand)
         {
             operand.Accept(generator);
             generator.SqlBuilder.Append(" IN (");

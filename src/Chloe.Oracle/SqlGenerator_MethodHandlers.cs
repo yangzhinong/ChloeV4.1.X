@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Reflection;
 
 namespace Chloe.Oracle
 {
-    partial class SqlGenerator : DbExpressionVisitor<DbExpression>
+    partial class SqlGenerator : SqlGeneratorBase
     {
         static Dictionary<string, IMethodHandler> GetMethodHandlers()
         {

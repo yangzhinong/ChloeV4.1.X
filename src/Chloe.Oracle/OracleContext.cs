@@ -4,6 +4,7 @@ using Chloe.DbExpressions;
 using Chloe.Descriptors;
 using Chloe.Exceptions;
 using Chloe.Infrastructure;
+using Chloe.RDBMS;
 using Chloe.Utility;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,21 @@ namespace Chloe.Oracle
 
         public OracleContext(Func<IDbConnection> dbConnectionFactory) : this(new DbConnectionFactory(dbConnectionFactory))
         {
+        }
+
+        /// <summary>
+        /// 设置方法解析器。
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="handler"></param>
+        public static void SetMethodHandler(string methodName, IMethodHandler handler)
+        {
+            PublicHelper.CheckNull(methodName, nameof(methodName));
+            PublicHelper.CheckNull(handler, nameof(handler));
+            lock (SqlGenerator.MethodHandlers)
+            {
+                SqlGenerator.MethodHandlers[methodName] = handler;
+            }
         }
 
         /// <summary>

@@ -9,8 +9,8 @@ namespace Chloe.Core.Visitors
 {
     public class DefaultExpressionParser : ExpressionVisitorBase
     {
-        TypeDescriptor _typeDescriptor;
-        DbTable _explicitDbTable;
+        private TypeDescriptor _typeDescriptor;
+        private DbTable _explicitDbTable;
 
         public DefaultExpressionParser(TypeDescriptor typeDescriptor, DbTable explicitDbTable)
         {
@@ -22,6 +22,7 @@ namespace Chloe.Core.Visitors
         {
             return this.Visit(BooleanResultExpressionTransformer.Transform(filterPredicate));
         }
+
         public DbExpression Parse(Expression exp)
         {
             return this.Visit(exp);
@@ -40,7 +41,7 @@ namespace Chloe.Core.Visitors
                     if (first)
                     {
                         DbColumnAccessExpression dbColumnAccessExpression = this._typeDescriptor.GetColumnAccessExpression(me.Member);
-                        if (this._explicitDbTable != null)
+                        if (this._explicitDbTable != null && this._explicitDbTable != dbColumnAccessExpression.Table)
                             dbColumnAccessExpression = new DbColumnAccessExpression(this._explicitDbTable, dbColumnAccessExpression.Column);
 
                         dbExp = dbColumnAccessExpression;

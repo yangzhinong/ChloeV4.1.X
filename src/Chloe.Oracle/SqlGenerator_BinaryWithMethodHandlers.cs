@@ -1,15 +1,16 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace Chloe.Oracle
 {
-    partial class SqlGenerator : DbExpressionVisitor<DbExpression>
+    partial class SqlGenerator : SqlGeneratorBase
     {
-        static Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGenerator>> InitBinaryWithMethodHandlers()
+        static Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGeneratorBase>> InitBinaryWithMethodHandlers()
         {
-            var binaryWithMethodHandlers = new Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGenerator>>();
+            var binaryWithMethodHandlers = new Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGeneratorBase>>();
             binaryWithMethodHandlers.Add(PublicConstants.MethodInfo_String_Concat_String_String, StringConcat);
             binaryWithMethodHandlers.Add(PublicConstants.MethodInfo_String_Concat_Object_Object, StringConcat);
 
@@ -17,13 +18,13 @@ namespace Chloe.Oracle
             return ret;
         }
 
-        static void StringConcat(DbBinaryExpression exp, SqlGenerator generator)
+        static void StringConcat(DbBinaryExpression exp, SqlGeneratorBase generator)
         {
-            generator._sqlBuilder.Append("CONCAT(");
+            generator.SqlBuilder.Append("CONCAT(");
             exp.Left.Accept(generator);
-            generator._sqlBuilder.Append(",");
+            generator.SqlBuilder.Append(",");
             exp.Right.Accept(generator);
-            generator._sqlBuilder.Append(")");
+            generator.SqlBuilder.Append(")");
         }
     }
 }

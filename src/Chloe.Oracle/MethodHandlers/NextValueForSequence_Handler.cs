@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using Chloe.InternalExtensions;
 using System;
 
@@ -13,7 +14,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return true;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             /* SELECT "SYSTEM"."USERS_AUTOID"."NEXTVAL" FROM "DUAL" */
 
@@ -25,11 +26,11 @@ namespace Chloe.Oracle.MethodHandlers
 
             if (!string.IsNullOrEmpty(sequenceSchema))
             {
-                generator.QuoteName(sequenceSchema);
+                (generator as SqlGenerator).QuoteName(sequenceSchema);
                 generator.SqlBuilder.Append(".");
             }
 
-            generator.QuoteName(sequenceName);
+            (generator as SqlGenerator).QuoteName(sequenceName);
             generator.SqlBuilder.Append(".nextval");
         }
     }

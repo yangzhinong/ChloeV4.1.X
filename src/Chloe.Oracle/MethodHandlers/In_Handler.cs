@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -28,7 +29,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return false;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             MethodInfo method = exp.Method;
             /* public static bool In<T>(this T obj, IEnumerable<T> source) */

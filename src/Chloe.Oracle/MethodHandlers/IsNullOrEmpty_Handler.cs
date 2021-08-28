@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,7 +14,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return true;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             DbExpression e = exp.Arguments.First();
             DbEqualExpression equalNullExpression = DbExpression.Equal(e, DbExpression.Constant(null, PublicConstants.TypeOfString));

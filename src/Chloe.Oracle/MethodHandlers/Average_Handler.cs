@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System.Linq;
 
 namespace Chloe.Oracle.MethodHandlers
@@ -12,7 +13,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return true;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             SqlGenerator.Aggregate_Average(generator, exp.Arguments.First(), exp.Method.ReturnType);
         }

@@ -24,5 +24,4 @@
             return visitor.Visit(this);
         }
     }
-
 }

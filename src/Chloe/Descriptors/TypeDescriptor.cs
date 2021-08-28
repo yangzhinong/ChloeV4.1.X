@@ -4,7 +4,6 @@ using Chloe.Entity;
 using Chloe.Exceptions;
 using Chloe.Query;
 using Chloe.Reflection;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,10 +13,10 @@ namespace Chloe.Descriptors
 {
     public class TypeDescriptor
     {
-        Dictionary<MemberInfo, PropertyDescriptor> _propertyDescriptorMap;
-        Dictionary<MemberInfo, PrimitivePropertyDescriptor> _primitivePropertyDescriptorMap;
-        Dictionary<MemberInfo, DbColumnAccessExpression> _primitivePropertyColumnMap;
-        DefaultExpressionParser _expressionParser = null;
+        private Dictionary<MemberInfo, PropertyDescriptor> _propertyDescriptorMap;
+        private Dictionary<MemberInfo, PrimitivePropertyDescriptor> _primitivePropertyDescriptorMap;
+        private Dictionary<MemberInfo, DbColumnAccessExpression> _primitivePropertyColumnMap;
+        private DefaultExpressionParser _expressionParser = null;
 
         public TypeDescriptor(TypeDefinition definition)
         {
@@ -55,30 +54,35 @@ namespace Chloe.Descriptors
 
         public DefaultExpressionParser GetExpressionParser(DbTable explicitDbTable)
         {
-            if (explicitDbTable == null)
+            DbTable dbTable = explicitDbTable ?? this.Table;
+
+            if (dbTable == this.Table)
             {
                 if (this._expressionParser == null)
                     this._expressionParser = new DefaultExpressionParser(this, null);
                 return this._expressionParser;
             }
-            else
-                return new DefaultExpressionParser(this, explicitDbTable);
+
+            return new DefaultExpressionParser(this, explicitDbTable);
         }
 
         public bool HasPrimaryKey()
         {
             return this.PrimaryKeys.Count > 0;
         }
+
         public bool HasRowVersion()
         {
             return this.RowVersion != null;
         }
+
         public PrimitivePropertyDescriptor FindPrimitivePropertyDescriptor(MemberInfo member)
         {
             member = member.AsReflectedMemberOf(this.Definition.Type);
             PrimitivePropertyDescriptor propertyDescriptor = this._primitivePropertyDescriptorMap.FindValue(member);
             return propertyDescriptor;
         }
+
         public PrimitivePropertyDescriptor GetPrimitivePropertyDescriptor(MemberInfo member)
         {
             PrimitivePropertyDescriptor propertyDescriptor = this.FindPrimitivePropertyDescriptor(member);
@@ -87,12 +91,14 @@ namespace Chloe.Descriptors
 
             return propertyDescriptor;
         }
+
         public PropertyDescriptor FindPropertyDescriptor(MemberInfo member)
         {
             member = member.AsReflectedMemberOf(this.Definition.Type);
             PropertyDescriptor propertyDescriptor = this._propertyDescriptorMap.FindValue(member);
             return propertyDescriptor;
         }
+
         public PropertyDescriptor GetPropertyDescriptor(MemberInfo member)
         {
             PropertyDescriptor propertyDescriptor = this.FindPropertyDescriptor(member);
@@ -101,12 +107,14 @@ namespace Chloe.Descriptors
 
             return propertyDescriptor;
         }
+
         public DbColumnAccessExpression FindColumnAccessExpression(MemberInfo member)
         {
             member = member.AsReflectedMemberOf(this.Definition.Type);
             DbColumnAccessExpression dbColumnAccessExpression = this._primitivePropertyColumnMap.FindValue(member);
             return dbColumnAccessExpression;
         }
+
         public DbColumnAccessExpression GetColumnAccessExpression(MemberInfo member)
         {
             DbColumnAccessExpression dbColumnAccessExpression = this.FindColumnAccessExpression(member);
@@ -130,6 +138,7 @@ namespace Chloe.Descriptors
 
             return model;
         }
+
         internal DbTable GenDbTable(string explicitTableName)
         {
             DbTable dbTable = this.Table;

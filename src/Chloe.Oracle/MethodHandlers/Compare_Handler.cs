@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using Chloe.InternalExtensions;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Chloe.Oracle.MethodHandlers
         {
             return exp.Method.DeclaringType == PublicConstants.TypeOfSql;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             DbExpression left = exp.Arguments[0];
             DbExpression right = exp.Arguments[2];

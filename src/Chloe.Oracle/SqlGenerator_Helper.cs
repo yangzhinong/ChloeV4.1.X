@@ -1,5 +1,6 @@
 ﻿using Chloe.DbExpressions;
 using Chloe.InternalExtensions;
+using Chloe.RDBMS;
 using Chloe.Reflection;
 using System;
 using System.Collections.Generic;
@@ -7,15 +8,15 @@ using System.Linq;
 
 namespace Chloe.Oracle
 {
-    partial class SqlGenerator : DbExpressionVisitor<DbExpression>
+    partial class SqlGenerator : SqlGeneratorBase
     {
         void LeftBracket()
         {
-            this._sqlBuilder.Append("(");
+            this.SqlBuilder.Append("(");
         }
         void RightBracket()
         {
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
         }
 
         static string GenParameterName(int ordinal)
@@ -171,7 +172,7 @@ namespace Chloe.Oracle
             return string.Format("Does not support the type '{0}' converted to type '{1}'.", sourceType.FullName, targetType.FullName);
         }
 
-        public static void DbFunction_DATEADD(SqlGenerator generator, string interval, DbMethodCallExpression exp)
+        public static void DbFunction_DATEADD(SqlGeneratorBase generator, string interval, DbMethodCallExpression exp)
         {
             /*
              * Just support hour/minute/second
@@ -179,53 +180,53 @@ namespace Chloe.Oracle
              * sysdate + numtodsinterval(50,'MINUTE')
              * sysdate + numtodsinterval(45,'SECOND')
              */
-            generator._sqlBuilder.Append("(");
+            generator.SqlBuilder.Append("(");
             exp.Object.Accept(generator);
-            generator._sqlBuilder.Append(" + ");
-            generator._sqlBuilder.Append("NUMTODSINTERVAL(");
+            generator.SqlBuilder.Append(" + ");
+            generator.SqlBuilder.Append("NUMTODSINTERVAL(");
             exp.Arguments[0].Accept(generator);
-            generator._sqlBuilder.Append(",'");
-            generator._sqlBuilder.Append(interval);
-            generator._sqlBuilder.Append("')");
-            generator._sqlBuilder.Append(")");
+            generator.SqlBuilder.Append(",'");
+            generator.SqlBuilder.Append(interval);
+            generator.SqlBuilder.Append("')");
+            generator.SqlBuilder.Append(")");
         }
-        public static void DbFunction_DATEPART(SqlGenerator generator, string interval, DbExpression exp, bool castToTimestamp = false)
+        public static void DbFunction_DATEPART(SqlGeneratorBase generator, string interval, DbExpression exp, bool castToTimestamp = false)
         {
             /* cast(to_char(sysdate,'yyyy') as number) */
-            generator._sqlBuilder.Append("CAST(TO_CHAR(");
+            generator.SqlBuilder.Append("CAST(TO_CHAR(");
             if (castToTimestamp)
             {
-                generator.BuildCastState(exp, "TIMESTAMP");
+                (generator as SqlGenerator).BuildCastState(exp, "TIMESTAMP");
             }
             else
                 exp.Accept(generator);
-            generator._sqlBuilder.Append(",'");
-            generator._sqlBuilder.Append(interval);
-            generator._sqlBuilder.Append("') AS NUMBER)");
+            generator.SqlBuilder.Append(",'");
+            generator.SqlBuilder.Append(interval);
+            generator.SqlBuilder.Append("') AS NUMBER)");
         }
-        public static void DbFunction_DATEDIFF(SqlGenerator generator, string interval, DbExpression startDateTimeExp, DbExpression endDateTimeExp)
+        public static void DbFunction_DATEDIFF(SqlGeneratorBase generator, string interval, DbExpression startDateTimeExp, DbExpression endDateTimeExp)
         {
             throw new NotSupportedException("DATEDIFF is not supported.");
         }
 
         #region AggregateFunction
-        public static void Aggregate_Count(SqlGenerator generator)
+        public static void Aggregate_Count(SqlGeneratorBase generator)
         {
-            generator._sqlBuilder.Append("COUNT(1)");
+            generator.SqlBuilder.Append("COUNT(1)");
         }
-        public static void Aggregate_LongCount(SqlGenerator generator)
+        public static void Aggregate_LongCount(SqlGeneratorBase generator)
         {
-            generator._sqlBuilder.Append("COUNT(1)");
+            generator.SqlBuilder.Append("COUNT(1)");
         }
-        public static void Aggregate_Max(SqlGenerator generator, DbExpression exp, Type retType)
+        public static void Aggregate_Max(SqlGeneratorBase generator, DbExpression exp, Type retType)
         {
             AppendAggregateFunction(generator, exp, retType, "MAX", false);
         }
-        public static void Aggregate_Min(SqlGenerator generator, DbExpression exp, Type retType)
+        public static void Aggregate_Min(SqlGeneratorBase generator, DbExpression exp, Type retType)
         {
             AppendAggregateFunction(generator, exp, retType, "MIN", false);
         }
-        public static void Aggregate_Sum(SqlGenerator generator, DbExpression exp, Type retType)
+        public static void Aggregate_Sum(SqlGeneratorBase generator, DbExpression exp, Type retType)
         {
             if (retType.IsNullable())
             {
@@ -233,19 +234,21 @@ namespace Chloe.Oracle
             }
             else
             {
-                generator._sqlBuilder.Append("NVL(");
+                generator.SqlBuilder.Append("NVL(");
                 AppendAggregateFunction(generator, exp, retType, "SUM", false);
-                generator._sqlBuilder.Append(",");
-                generator._sqlBuilder.Append("0");
-                generator._sqlBuilder.Append(")");
+                generator.SqlBuilder.Append(",");
+                generator.SqlBuilder.Append("0");
+                generator.SqlBuilder.Append(")");
             }
         }
-        public static void Aggregate_Average(SqlGenerator generator, DbExpression exp, Type retType)
+        public static void Aggregate_Average(SqlGeneratorBase generator, DbExpression exp, Type retType)
         {
+            generator.SqlBuilder.Append("TRUNC", "(");
             AppendAggregateFunction(generator, exp, retType, "AVG", false);
+            generator.SqlBuilder.Append(",7)");
         }
 
-        static void AppendAggregateFunction(SqlGenerator generator, DbExpression exp, Type retType, string functionName, bool withCast)
+        static void AppendAggregateFunction(SqlGeneratorBase generator, DbExpression exp, Type retType, string functionName, bool withCast)
         {
             string dbTypeString = null;
             if (withCast == true)
@@ -253,17 +256,17 @@ namespace Chloe.Oracle
                 Type underlyingType = ReflectionExtension.GetUnderlyingType(retType);
                 if (CastTypeMap.TryGetValue(underlyingType, out dbTypeString))
                 {
-                    generator._sqlBuilder.Append("CAST(");
+                    generator.SqlBuilder.Append("CAST(");
                 }
             }
 
-            generator._sqlBuilder.Append(functionName, "(");
+            generator.SqlBuilder.Append(functionName, "(");
             exp.Accept(generator);
-            generator._sqlBuilder.Append(")");
+            generator.SqlBuilder.Append(")");
 
             if (dbTypeString != null)
             {
-                generator._sqlBuilder.Append(" AS ", dbTypeString, ")");
+                generator.SqlBuilder.Append(" AS ", dbTypeString, ")");
             }
         }
         #endregion

@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using System.Collections.Generic;
 using static Chloe.DbExpressions.DbCaseWhenExpression;
 
@@ -10,7 +11,7 @@ namespace Chloe.Oracle.MethodHandlers
         {
             return exp.Method.DeclaringType.IsGenericType && exp.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Then<>);
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             List<WhenThenExpressionPair> pairs = new List<WhenThenExpressionPair>();
             GetWhenThenPairs(exp.Object as DbMethodCallExpression, pairs);

@@ -1,4 +1,5 @@
 ﻿using Chloe.DbExpressions;
+using Chloe.RDBMS;
 using Chloe.InternalExtensions;
 using System.Reflection;
 
@@ -20,7 +21,7 @@ namespace Chloe.Oracle.MethodHandlers
 
             return true;
         }
-        public void Process(DbMethodCallExpression exp, SqlGenerator generator)
+        public void Process(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             MethodInfo method = exp.Method;
             if (method.DeclaringType == PublicConstants.TypeOfSql)
@@ -38,7 +39,7 @@ namespace Chloe.Oracle.MethodHandlers
             DbExpression.Equal(exp.Object, right).Accept(generator);
         }
 
-        static void Method_Sql_Equals(DbMethodCallExpression exp, SqlGenerator generator)
+        static void Method_Sql_Equals(DbMethodCallExpression exp, SqlGeneratorBase generator)
         {
             DbExpression left = exp.Arguments[0];
             DbExpression right = exp.Arguments[1];

@@ -2,6 +2,7 @@
 using Chloe.Core.Visitors;
 using Chloe.DbExpressions;
 using Chloe.InternalExtensions;
+using Chloe.RDBMS;
 using Chloe.Reflection;
 using System;
 using System.Collections.Generic;
@@ -10,17 +11,16 @@ using System.Reflection;
 
 namespace Chloe.Oracle
 {
-    partial class SqlGenerator : DbExpressionVisitor<DbExpression>
+    partial class SqlGenerator : SqlGeneratorBase
     {
         static readonly object Boxed_1 = 1;
         static readonly object Boxed_0 = 0;
 
-        ISqlBuilder _sqlBuilder = new SqlBuilder();
         DbParamCollection _parameters = new DbParamCollection();
 
         public static readonly Dictionary<string, IMethodHandler> MethodHandlers = GetMethodHandlers();
-        static readonly Dictionary<string, Action<DbAggregateExpression, SqlGenerator>> AggregateHandlers = InitAggregateHandlers();
-        static readonly Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGenerator>> BinaryWithMethodHandlers = InitBinaryWithMethodHandlers();
+        static readonly Dictionary<string, Action<DbAggregateExpression, SqlGeneratorBase>> AggregateHandlers = InitAggregateHandlers();
+        static readonly Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGeneratorBase>> BinaryWithMethodHandlers = InitBinaryWithMethodHandlers();
         static readonly Dictionary<Type, string> CastTypeMap;
         public static readonly Dictionary<Type, Type> NumericTypes;
         static readonly List<string> CacheParameterNames;
@@ -67,7 +67,6 @@ namespace Chloe.Oracle
             CacheParameterNames = cacheParameterNames;
         }
 
-        public ISqlBuilder SqlBuilder { get { return this._sqlBuilder; } }
         public List<DbParam> Parameters { get { return this._parameters.ToParameterList(); } }
 
         public static SqlGenerator CreateInstance()
@@ -88,11 +87,12 @@ namespace Chloe.Oracle
             /* Sql.Equals(left, right) */
             DbMethodCallExpression left_equals_right = DbExpression.MethodCall(null, method_Sql_Equals, new List<DbExpression>(2) { left, right });
 
-            if (right.NodeType == DbExpressionType.Parameter || right.NodeType == DbExpressionType.Constant || left.NodeType == DbExpressionType.Parameter || left.NodeType == DbExpressionType.Constant || right.NodeType == DbExpressionType.SubQuery || left.NodeType == DbExpressionType.SubQuery)
+            if (right.NodeType == DbExpressionType.Parameter || right.NodeType == DbExpressionType.Constant || left.NodeType == DbExpressionType.Parameter || left.NodeType == DbExpressionType.Constant || right.NodeType == DbExpressionType.SubQuery || left.NodeType == DbExpressionType.SubQuery || !left.Type.CanNull() || !right.Type.CanNull())
             {
                 /*
                  * a.Name == name --> a.Name == name
-                 * a.Id == (select top 1 T.Id from T) --> a.Id == (select top 1 T.Id from T)，对于这种查询，我们不考虑 null
+                 * a.Id == (select top 1 T.Id from T) --> a.Id == (select top 1 T.Id from T)
+                 * 对于上述查询，我们不考虑 null
                  */
 
                 left_equals_right.Accept(this);
@@ -232,21 +232,21 @@ namespace Chloe.Oracle
 
         public override DbExpression Visit(DbNotExpression exp)
         {
-            this._sqlBuilder.Append("NOT ");
-            this._sqlBuilder.Append("(");
+            this.SqlBuilder.Append("NOT ");
+            this.SqlBuilder.Append("(");
             exp.Operand.Accept(this);
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
             return exp;
         }
 
         public override DbExpression Visit(DbBitAndExpression exp)
         {
-            this._sqlBuilder.Append("BITAND(");
+            this.SqlBuilder.Append("BITAND(");
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(",");
+            this.SqlBuilder.Append(",");
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
             return exp;
         }
@@ -275,7 +275,7 @@ namespace Chloe.Oracle
             MethodInfo method = exp.Method;
             if (method != null)
             {
-                Action<DbBinaryExpression, SqlGenerator> handler;
+                Action<DbBinaryExpression, SqlGeneratorBase> handler;
                 if (BinaryWithMethodHandlers.TryGetValue(method, out handler))
                 {
                     handler(exp, this);
@@ -315,29 +315,29 @@ namespace Chloe.Oracle
         // %
         public override DbExpression Visit(DbModuloExpression exp)
         {
-            this._sqlBuilder.Append("MOD(");
+            this.SqlBuilder.Append("MOD(");
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(",");
+            this.SqlBuilder.Append(",");
             exp.Right.Accept(this);
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
             return exp;
         }
         public override DbExpression Visit(DbNegateExpression exp)
         {
-            this._sqlBuilder.Append("(");
+            this.SqlBuilder.Append("(");
 
-            this._sqlBuilder.Append("-");
+            this.SqlBuilder.Append("-");
             exp.Operand.Accept(this);
 
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
             return exp;
         }
         // <
         public override DbExpression Visit(DbLessThanExpression exp)
         {
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(" < ");
+            this.SqlBuilder.Append(" < ");
             exp.Right.Accept(this);
 
             return exp;
@@ -346,7 +346,7 @@ namespace Chloe.Oracle
         public override DbExpression Visit(DbLessThanOrEqualExpression exp)
         {
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(" <= ");
+            this.SqlBuilder.Append(" <= ");
             exp.Right.Accept(this);
 
             return exp;
@@ -355,7 +355,7 @@ namespace Chloe.Oracle
         public override DbExpression Visit(DbGreaterThanExpression exp)
         {
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(" > ");
+            this.SqlBuilder.Append(" > ");
             exp.Right.Accept(this);
 
             return exp;
@@ -364,7 +364,7 @@ namespace Chloe.Oracle
         public override DbExpression Visit(DbGreaterThanOrEqualExpression exp)
         {
             exp.Left.Accept(this);
-            this._sqlBuilder.Append(" >= ");
+            this.SqlBuilder.Append(" >= ");
             exp.Right.Accept(this);
 
             return exp;
@@ -373,7 +373,7 @@ namespace Chloe.Oracle
 
         public override DbExpression Visit(DbAggregateExpression exp)
         {
-            Action<DbAggregateExpression, SqlGenerator> aggregateHandler;
+            Action<DbAggregateExpression, SqlGeneratorBase> aggregateHandler;
             if (!AggregateHandlers.TryGetValue(exp.Method.Name, out aggregateHandler))
             {
                 throw UtilExceptions.NotSupportedMethod(exp.Method);
@@ -392,7 +392,7 @@ namespace Chloe.Oracle
         public override DbExpression Visit(DbColumnAccessExpression exp)
         {
             this.QuoteName(exp.Table.Name);
-            this._sqlBuilder.Append(".");
+            this.SqlBuilder.Append(".");
             this.QuoteName(exp.Column.Name);
 
             return exp;
@@ -428,9 +428,9 @@ namespace Chloe.Oracle
             else
                 throw new NotSupportedException("JoinType: " + joinTablePart.JoinType);
 
-            this._sqlBuilder.Append(joinString);
+            this.SqlBuilder.Append(joinString);
             this.AppendTableSegment(joinTablePart.Table);
-            this._sqlBuilder.Append(" ON ");
+            this.SqlBuilder.Append(" ON ");
             JoinConditionExpressionTransformer.Transform(joinTablePart.Condition).Accept(this);
             this.VisitDbJoinTableExpressions(joinTablePart.JoinTables);
 
@@ -440,9 +440,9 @@ namespace Chloe.Oracle
 
         public override DbExpression Visit(DbSubQueryExpression exp)
         {
-            this._sqlBuilder.Append("(");
+            this.SqlBuilder.Append("(");
             exp.SqlQuery.Accept(this);
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
             return exp;
         }
@@ -488,9 +488,9 @@ namespace Chloe.Oracle
         }
         public override DbExpression Visit(DbInsertExpression exp)
         {
-            this._sqlBuilder.Append("INSERT INTO ");
+            this.SqlBuilder.Append("INSERT INTO ");
             this.AppendTable(exp.Table);
-            this._sqlBuilder.Append("(");
+            this.SqlBuilder.Append("(");
 
             bool first = true;
             foreach (var item in exp.InsertColumns)
@@ -499,15 +499,15 @@ namespace Chloe.Oracle
                     first = false;
                 else
                 {
-                    this._sqlBuilder.Append(",");
+                    this.SqlBuilder.Append(",");
                 }
 
                 this.QuoteName(item.Key.Name);
             }
 
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
-            this._sqlBuilder.Append(" VALUES(");
+            this.SqlBuilder.Append(" VALUES(");
             first = true;
             foreach (var item in exp.InsertColumns)
             {
@@ -515,7 +515,7 @@ namespace Chloe.Oracle
                     first = false;
                 else
                 {
-                    this._sqlBuilder.Append(",");
+                    this.SqlBuilder.Append(",");
                 }
 
                 DbExpression valExp = item.Value.StripInvalidConvert();
@@ -523,18 +523,18 @@ namespace Chloe.Oracle
                 DbValueExpressionTransformer.Transform(valExp).Accept(this);
             }
 
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
             if (exp.Returns.Count > 0)
             {
-                this._sqlBuilder.Append(" RETURNING ");
+                this.SqlBuilder.Append(" RETURNING ");
 
                 string outputParamNames = "";
                 for (int i = 0; i < exp.Returns.Count; i++)
                 {
                     if (i > 0)
                     {
-                        this._sqlBuilder.Append(",");
+                        this.SqlBuilder.Append(",");
                         outputParamNames = outputParamNames + ",";
                     }
 
@@ -549,16 +549,16 @@ namespace Chloe.Oracle
                     this._parameters.Add(outputParam);
                 }
 
-                this._sqlBuilder.Append(" INTO ", outputParamNames);
+                this.SqlBuilder.Append(" INTO ", outputParamNames);
             }
 
             return exp;
         }
         public override DbExpression Visit(DbUpdateExpression exp)
         {
-            this._sqlBuilder.Append("UPDATE ");
+            this.SqlBuilder.Append("UPDATE ");
             this.AppendTable(exp.Table);
-            this._sqlBuilder.Append(" SET ");
+            this.SqlBuilder.Append(" SET ");
 
             bool first = true;
             foreach (var item in exp.UpdateColumns)
@@ -566,10 +566,10 @@ namespace Chloe.Oracle
                 if (first)
                     first = false;
                 else
-                    this._sqlBuilder.Append(",");
+                    this.SqlBuilder.Append(",");
 
                 this.QuoteName(item.Key.Name);
-                this._sqlBuilder.Append("=");
+                this.SqlBuilder.Append("=");
 
                 DbExpression valExp = item.Value.StripInvalidConvert();
                 AmendDbInfo(item.Key, valExp);
@@ -582,7 +582,7 @@ namespace Chloe.Oracle
         }
         public override DbExpression Visit(DbDeleteExpression exp)
         {
-            this._sqlBuilder.Append("DELETE FROM ");
+            this.SqlBuilder.Append("DELETE FROM ");
             this.AppendTable(exp.Table);
             this.BuildWhereState(exp.Condition);
 
@@ -591,7 +591,7 @@ namespace Chloe.Oracle
 
         public override DbExpression Visit(DbExistsExpression exp)
         {
-            this._sqlBuilder.Append("Exists ");
+            this.SqlBuilder.Append("Exists ");
 
             DbSqlQueryExpression rawSqlQuery = exp.SqlQuery;
             DbSqlQueryExpression sqlQuery = new DbSqlQueryExpression()
@@ -605,7 +605,7 @@ namespace Chloe.Oracle
 
             sqlQuery.GroupSegments.AddRange(rawSqlQuery.GroupSegments);
 
-            DbColumnSegment columnSegment = new DbColumnSegment(DbExpression.Constant("1"), "C");
+            DbColumnSegment columnSegment = new DbColumnSegment(DbExpression.Parameter("1"), "C");
             sqlQuery.ColumnSegments.Add(columnSegment);
 
             DbSubQueryExpression subQuery = new DbSubQueryExpression(sqlQuery);
@@ -614,11 +614,11 @@ namespace Chloe.Oracle
 
         public override DbExpression Visit(DbCoalesceExpression exp)
         {
-            this._sqlBuilder.Append("NVL(");
+            this.SqlBuilder.Append("NVL(");
             EnsureDbExpressionReturnCSharpBoolean(exp.CheckExpression).Accept(this);
-            this._sqlBuilder.Append(",");
+            this.SqlBuilder.Append(",");
             EnsureDbExpressionReturnCSharpBoolean(exp.ReplacementValue).Accept(this);
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
 
             return exp;
         }
@@ -627,19 +627,19 @@ namespace Chloe.Oracle
         {
             this.LeftBracket();
 
-            this._sqlBuilder.Append("CASE");
+            this.SqlBuilder.Append("CASE");
             foreach (var whenThen in exp.WhenThenPairs)
             {
                 // then 部分得判断是否是诸如 a>1,a=b,in,like 等等的情况，如果是则将其构建成一个 case when 
-                this._sqlBuilder.Append(" WHEN ");
+                this.SqlBuilder.Append(" WHEN ");
                 whenThen.When.Accept(this);
-                this._sqlBuilder.Append(" THEN ");
+                this.SqlBuilder.Append(" THEN ");
                 EnsureDbExpressionReturnCSharpBoolean(whenThen.Then).Accept(this);
             }
 
-            this._sqlBuilder.Append(" ELSE ");
+            this.SqlBuilder.Append(" ELSE ");
             EnsureDbExpressionReturnCSharpBoolean(exp.Else).Accept(this);
-            this._sqlBuilder.Append(" END");
+            this.SqlBuilder.Append(" END");
 
             this.RightBracket();
 
@@ -659,17 +659,17 @@ namespace Chloe.Oracle
 
             if (exp.Type == PublicConstants.TypeOfString)
             {
-                this._sqlBuilder.Append("TO_CHAR(");
+                this.SqlBuilder.Append("TO_CHAR(");
                 exp.Operand.Accept(this);
-                this._sqlBuilder.Append(")");
+                this.SqlBuilder.Append(")");
                 return exp;
             }
 
             if (exp.Type == PublicConstants.TypeOfDateTime)
             {
-                this._sqlBuilder.Append("TO_TIMESTAMP(");
+                this.SqlBuilder.Append("TO_TIMESTAMP(");
                 exp.Operand.Accept(this);
-                this._sqlBuilder.Append(",'yyyy-mm-dd hh24:mi:ssxff')");
+                this.SqlBuilder.Append(",'yyyy-mm-dd hh24:mi:ssxff')");
                 return exp;
             }
 
@@ -706,21 +706,21 @@ namespace Chloe.Oracle
                 if (!string.IsNullOrEmpty(schema))
                 {
                     this.QuoteName(schema);
-                    this._sqlBuilder.Append(".");
+                    this.SqlBuilder.Append(".");
                 }
 
                 this.QuoteName(functionName);
-                this._sqlBuilder.Append("(");
+                this.SqlBuilder.Append("(");
 
                 string c = "";
                 foreach (DbExpression argument in exp.Arguments)
                 {
-                    this._sqlBuilder.Append(c);
+                    this.SqlBuilder.Append(c);
                     argument.Accept(this);
                     c = ",";
                 }
 
-                this._sqlBuilder.Append(")");
+                this.SqlBuilder.Append(")");
 
                 return exp;
             }
@@ -739,7 +739,7 @@ namespace Chloe.Oracle
 
             if (member == OracleSemantics.PropertyInfo_ROWNUM)
             {
-                this._sqlBuilder.Append("ROWNUM");
+                this.SqlBuilder.Append("ROWNUM");
                 return exp;
             }
 
@@ -747,28 +747,28 @@ namespace Chloe.Oracle
             {
                 if (member == PublicConstants.PropertyInfo_DateTime_Now)
                 {
-                    this._sqlBuilder.Append("SYSTIMESTAMP");
+                    this.SqlBuilder.Append("SYSTIMESTAMP");
                     return exp;
                 }
 
                 if (member == PublicConstants.PropertyInfo_DateTime_UtcNow)
                 {
-                    this._sqlBuilder.Append("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
+                    this.SqlBuilder.Append("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
                     return exp;
                 }
 
                 if (member == PublicConstants.PropertyInfo_DateTime_Today)
                 {
-                    //other way: this._sqlBuilder.Append("TO_DATE(TO_CHAR(SYSDATE,'yyyy-mm-dd'),'yyyy-mm-dd')");
-                    this._sqlBuilder.Append("TRUNC(SYSDATE,'DD')");
+                    //other way: this.SqlBuilder.Append("TO_DATE(TO_CHAR(SYSDATE,'yyyy-mm-dd'),'yyyy-mm-dd')");
+                    this.SqlBuilder.Append("TRUNC(SYSDATE,'DD')");
                     return exp;
                 }
 
                 if (member == PublicConstants.PropertyInfo_DateTime_Date)
                 {
-                    this._sqlBuilder.Append("TRUNC(");
+                    this.SqlBuilder.Append("TRUNC(");
                     exp.Expression.Accept(this);
-                    this._sqlBuilder.Append(",'DD')");
+                    this.SqlBuilder.Append(",'DD')");
                     return exp;
                 }
 
@@ -785,9 +785,9 @@ namespace Chloe.Oracle
 
             if (member.Name == "Length" && member.DeclaringType == PublicConstants.TypeOfString)
             {
-                this._sqlBuilder.Append("LENGTH(");
+                this.SqlBuilder.Append("LENGTH(");
                 exp.Expression.Accept(this);
-                this._sqlBuilder.Append(")");
+                this.SqlBuilder.Append(")");
 
                 return exp;
             }
@@ -810,32 +810,32 @@ namespace Chloe.Oracle
         {
             if (exp.Value == null || exp.Value == DBNull.Value)
             {
-                this._sqlBuilder.Append("NULL");
+                this.SqlBuilder.Append("NULL");
                 return exp;
             }
 
             var objType = exp.Value.GetType();
             if (objType == PublicConstants.TypeOfBoolean)
             {
-                this._sqlBuilder.Append(((bool)exp.Value) ? "1" : "0");
+                this.SqlBuilder.Append(((bool)exp.Value) ? "1" : "0");
                 return exp;
             }
             else if (objType == PublicConstants.TypeOfString)
             {
                 if (string.Empty.Equals(exp.Value))
-                    this._sqlBuilder.Append("'", exp.Value, "'");
+                    this.SqlBuilder.Append("'", exp.Value, "'");
                 else
-                    this._sqlBuilder.Append("N'", exp.Value, "'");
+                    this.SqlBuilder.Append("N'", exp.Value, "'");
                 return exp;
             }
             else if (objType.IsEnum)
             {
-                this._sqlBuilder.Append(Convert.ChangeType(exp.Value, Enum.GetUnderlyingType(objType)).ToString());
+                this.SqlBuilder.Append(Convert.ChangeType(exp.Value, Enum.GetUnderlyingType(objType)).ToString());
                 return exp;
             }
             else if (NumericTypes.ContainsKey(exp.Value.GetType()))
             {
-                this._sqlBuilder.Append(exp.Value);
+                this.SqlBuilder.Append(exp.Value);
                 return exp;
             }
 
@@ -847,7 +847,7 @@ namespace Chloe.Oracle
         public override DbExpression Visit(DbParameterExpression exp)
         {
             object paramValue = exp.Value;
-            Type paramType = exp.Type;
+            Type paramType = exp.Type.GetUnderlyingType();
 
             if (paramType.IsEnum)
             {
@@ -876,7 +876,7 @@ namespace Chloe.Oracle
 
             if (p != null)
             {
-                this._sqlBuilder.Append(p.Name);
+                this.SqlBuilder.Append(p.Name);
                 return exp;
             }
 
@@ -895,7 +895,7 @@ namespace Chloe.Oracle
                 p.DbType = exp.DbType;
 
             this._parameters.Add(p);
-            this._sqlBuilder.Append(paramName);
+            this.SqlBuilder.Append(paramName);
             return exp;
         }
 
@@ -903,13 +903,13 @@ namespace Chloe.Oracle
         void AppendTableSegment(DbTableSegment seg)
         {
             seg.Body.Accept(this);
-            this._sqlBuilder.Append(" ");
+            this.SqlBuilder.Append(" ");
             this.QuoteName(seg.Alias);
         }
         void AppendColumnSegment(DbColumnSegment seg)
         {
             DbValueExpressionTransformer.Transform(seg.Body).Accept(this);
-            this._sqlBuilder.Append(" AS ");
+            this.SqlBuilder.Append(" AS ");
             this.QuoteName(seg.Alias);
         }
         void AppendOrdering(DbOrdering ordering)
@@ -917,13 +917,13 @@ namespace Chloe.Oracle
             if (ordering.OrderType == DbOrderType.Asc)
             {
                 ordering.Expression.Accept(this);
-                this._sqlBuilder.Append(" ASC");
+                this.SqlBuilder.Append(" ASC");
                 return;
             }
             else if (ordering.OrderType == DbOrderType.Desc)
             {
                 ordering.Expression.Accept(this);
-                this._sqlBuilder.Append(" DESC");
+                this.SqlBuilder.Append(" DESC");
                 return;
             }
 
@@ -942,22 +942,22 @@ namespace Chloe.Oracle
             if (exp.TakeCount != null || exp.SkipCount != null)
                 throw new ArgumentException();
 
-            this._sqlBuilder.Append("SELECT ");
+            this.SqlBuilder.Append("SELECT ");
 
             if (exp.IsDistinct)
-                this._sqlBuilder.Append("DISTINCT ");
+                this.SqlBuilder.Append("DISTINCT ");
 
             List<DbColumnSegment> columns = exp.ColumnSegments;
             for (int i = 0; i < columns.Count; i++)
             {
                 DbColumnSegment column = columns[i];
                 if (i > 0)
-                    this._sqlBuilder.Append(",");
+                    this.SqlBuilder.Append(",");
 
                 this.AppendColumnSegment(column);
             }
 
-            this._sqlBuilder.Append(" FROM ");
+            this.SqlBuilder.Append(" FROM ");
             exp.Table.Accept(this);
             this.BuildWhereState(exp.Condition);
             this.BuildGroupState(exp);
@@ -966,7 +966,7 @@ namespace Chloe.Oracle
             DbTableSegment seg = exp.Table.Table;
             if (seg.Lock == LockType.UpdLock)
             {
-                this._sqlBuilder.Append(" FOR UPDATE");
+                this.SqlBuilder.Append(" FOR UPDATE");
             }
             else if (seg.Lock == LockType.Unspecified || seg.Lock == LockType.NoLock)
             {
@@ -981,7 +981,7 @@ namespace Chloe.Oracle
         {
             if (whereExpression != null)
             {
-                this._sqlBuilder.Append(" WHERE ");
+                this.SqlBuilder.Append(" WHERE ");
                 whereExpression.Accept(this);
             }
         }
@@ -989,7 +989,7 @@ namespace Chloe.Oracle
         {
             if (orderings.Count > 0)
             {
-                this._sqlBuilder.Append(" ORDER BY ");
+                this.SqlBuilder.Append(" ORDER BY ");
                 this.ConcatOrderings(orderings);
             }
         }
@@ -999,7 +999,7 @@ namespace Chloe.Oracle
             {
                 if (i > 0)
                 {
-                    this._sqlBuilder.Append(",");
+                    this.SqlBuilder.Append(",");
                 }
 
                 this.AppendOrdering(orderings[i]);
@@ -1011,18 +1011,18 @@ namespace Chloe.Oracle
             if (groupSegments.Count == 0)
                 return;
 
-            this._sqlBuilder.Append(" GROUP BY ");
+            this.SqlBuilder.Append(" GROUP BY ");
             for (int i = 0; i < groupSegments.Count; i++)
             {
                 if (i > 0)
-                    this._sqlBuilder.Append(",");
+                    this.SqlBuilder.Append(",");
 
                 groupSegments[i].Accept(this);
             }
 
             if (exp.HavingCondition != null)
             {
-                this._sqlBuilder.Append(" HAVING ");
+                this.SqlBuilder.Append(" HAVING ");
                 exp.HavingCondition.Accept(this);
             }
         }
@@ -1036,14 +1036,14 @@ namespace Chloe.Oracle
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
 
-            this._sqlBuilder.Append("\"", this.SqlName(name), "\"");
+            this.SqlBuilder.Append("\"", this.SqlName(name), "\"");
         }
         void AppendTable(DbTable table)
         {
             if (!string.IsNullOrEmpty(table.Schema))
             {
                 this.QuoteName(table.Schema);
-                this._sqlBuilder.Append(".");
+                this.SqlBuilder.Append(".");
             }
 
             this.QuoteName(table.Name);
@@ -1051,7 +1051,7 @@ namespace Chloe.Oracle
 
         void ConcatOperands(IEnumerable<DbExpression> operands, string connector)
         {
-            this._sqlBuilder.Append("(");
+            this.SqlBuilder.Append("(");
 
             bool first = true;
             foreach (DbExpression operand in operands)
@@ -1059,19 +1059,19 @@ namespace Chloe.Oracle
                 if (first)
                     first = false;
                 else
-                    this._sqlBuilder.Append(connector);
+                    this.SqlBuilder.Append(connector);
 
                 operand.Accept(this);
             }
 
-            this._sqlBuilder.Append(")");
+            this.SqlBuilder.Append(")");
             return;
         }
         void BuildCastState(DbExpression castExp, string targetDbTypeString)
         {
-            this._sqlBuilder.Append("CAST(");
+            this.SqlBuilder.Append("CAST(");
             castExp.Accept(this);
-            this._sqlBuilder.Append(" AS ", targetDbTypeString, ")");
+            this.SqlBuilder.Append(" AS ", targetDbTypeString, ")");
         }
 
 
@@ -1125,10 +1125,10 @@ namespace Chloe.Oracle
             if (member == PublicConstants.PropertyInfo_DateTime_DayOfWeek)
             {
                 // CAST(TO_CHAR(SYSDATE,'D') AS NUMBER) - 1
-                this._sqlBuilder.Append("(");
+                this.SqlBuilder.Append("(");
                 DbFunction_DATEPART(this, "D", exp.Expression);
-                this._sqlBuilder.Append(" - 1");
-                this._sqlBuilder.Append(")");
+                this.SqlBuilder.Append(" - 1");
+                this.SqlBuilder.Append(")");
 
                 return true;
             }
@@ -1176,7 +1176,7 @@ namespace Chloe.Oracle
 
                         return false;
 
-                    appendIntervalTime:
+appendIntervalTime:
                         this.CalcDateDiffPrecise(dbMethodExp.Object, dbMethodExp.Arguments[0], intervalDivisor.Value);
                         return true;
                     }
@@ -1208,8 +1208,8 @@ namespace Chloe.Oracle
 
             this.LeftBracket();
             this.CalcDateDiffMillisecond(dateTime1, dateTime2);
-            this._sqlBuilder.Append(" / ");
-            this._sqlBuilder.Append(divisor.ToString());
+            this.SqlBuilder.Append(" / ");
+            this.SqlBuilder.Append(divisor.ToString());
             this.RightBracket();
         }
         void CalcDateDiffMillisecond(DbExpression dateTime1, DbExpression dateTime2)
@@ -1225,9 +1225,9 @@ namespace Chloe.Oracle
 
             this.LeftBracket();
             this.CalcDateDiffMillisecondSketchy(dateTime1, dateTime2);
-            this._sqlBuilder.Append(" + ");
+            this.SqlBuilder.Append(" + ");
             this.ExtractMillisecondPart(dateTime1);
-            this._sqlBuilder.Append(" - ");
+            this.SqlBuilder.Append(" - ");
             this.ExtractMillisecondPart(dateTime2);
             this.RightBracket();
         }
@@ -1239,25 +1239,25 @@ namespace Chloe.Oracle
              */
             this.LeftBracket();
             this.BuildCastState(dateTime1, "DATE");
-            this._sqlBuilder.Append("-");
+            this.SqlBuilder.Append("-");
             this.BuildCastState(dateTime2, "DATE");
             this.RightBracket();
 
-            this._sqlBuilder.Append(" * ");
-            this._sqlBuilder.Append((24 * 60 * 60 * 1000).ToString());
+            this.SqlBuilder.Append(" * ");
+            this.SqlBuilder.Append((24 * 60 * 60 * 1000).ToString());
         }
         void ExtractMillisecondPart(DbExpression dateTime)
         {
             /* 提取一个日期的毫秒部分：
              * cast(to_char(cast(dateTime as timestamp),'ff3') as number) 
              */
-            this._sqlBuilder.Append("CAST(");
+            this.SqlBuilder.Append("CAST(");
 
-            this._sqlBuilder.Append("TO_CHAR(");
+            this.SqlBuilder.Append("TO_CHAR(");
             this.BuildCastState(dateTime, "TIMESTAMP");
-            this._sqlBuilder.Append(",'ff3')");
+            this.SqlBuilder.Append(",'ff3')");
 
-            this._sqlBuilder.Append(" AS NUMBER)");
+            this.SqlBuilder.Append(" AS NUMBER)");
         }
     }
 }
