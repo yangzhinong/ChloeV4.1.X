@@ -199,6 +199,15 @@ end;";
 
             if (type == typeof(decimal))
             {
+                if (propertyDescriptor.Column.Precision.HasValue)
+                {
+                    var precision = propertyDescriptor.Column.Precision.Value;
+                    if (precision > 0)
+                    {
+                        var scale = propertyDescriptor.Column.Scale ?? 0;
+                        return $"NUMBER({precision},{scale})";
+                    }
+                }
                 return "NUMBER";
             }
 

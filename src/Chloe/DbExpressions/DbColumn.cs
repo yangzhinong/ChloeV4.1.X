@@ -10,6 +10,7 @@ namespace Chloe.DbExpressions
             : this(name, type, null, null, null, null)
         {
         }
+
         public DbColumn(string name, Type type, DbType? dbType, int? size, byte? scale, byte? precision)
         {
             if (string.IsNullOrEmpty(name))
@@ -29,7 +30,15 @@ namespace Chloe.DbExpressions
         public Type Type { get; private set; }
         public DbType? DbType { get; private set; }
         public int? Size { get; private set; }
+
+        /// <summary>
+        /// 小数位
+        /// </summary>
         public byte? Scale { get; private set; }
+
+        /// <summary>
+        /// 有效位
+        /// </summary>
         public byte? Precision { get; private set; }
 
         public static DbColumn MakeColumn(DbExpression exp, string alias)
@@ -44,5 +53,4 @@ namespace Chloe.DbExpressions
             return column;
         }
     }
-
 }
