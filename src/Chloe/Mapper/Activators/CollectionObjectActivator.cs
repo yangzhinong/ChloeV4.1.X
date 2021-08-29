@@ -1,4 +1,4 @@
-﻿using Chloe.Core.Emit;
+﻿using Chloe.Reflection.Emit;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,12 +8,12 @@ namespace Chloe.Mapper.Activators
 {
     public class CollectionObjectActivator : IObjectActivator
     {
-        Type _collectionType;
-        Func<object> _activator;
+        private Type _collectionType;
+        private Func<object> _activator;
 
-        static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Func<object>> ActivatorCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, Func<object>>();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Func<object>> ActivatorCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, Func<object>>();
 
-        static Func<object> GetActivator(Type collectionType)
+        private static Func<object> GetActivator(Type collectionType)
         {
             Func<object> activator = ActivatorCache.GetOrAdd(collectionType, type =>
            {
@@ -46,8 +46,8 @@ namespace Chloe.Mapper.Activators
 
         public void Prepare(IDataReader reader)
         {
-
         }
+
         public object CreateInstance(IDataReader reader)
         {
             return this._activator();

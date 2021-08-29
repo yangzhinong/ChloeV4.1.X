@@ -1,6 +1,6 @@
-﻿using Chloe.Core.Emit;
-using Chloe.Data;
+﻿using Chloe.Data;
 using Chloe.Reflection;
+using Chloe.Reflection.Emit;
 using System;
 using System.Data;
 using System.Reflection;
@@ -20,7 +20,7 @@ namespace Chloe.Mapper
         public Lazy<IMRM> SafeMRM { get; set; }
     }
 
-    static class MRMHelper
+    internal static class MRMHelper
     {
         public static IMRM CreateMRM(MemberInfo member, MappingType mappingType)
         {
@@ -28,6 +28,7 @@ namespace Chloe.Mapper
             IMRM obj = (IMRM)type.GetConstructor(Type.EmptyTypes).Invoke(null);
             return obj;
         }
+
         public static MRMTuple CreateMRMTuple(MemberInfo member, MappingType mappingType)
         {
             MRMTuple mrmTuple = new MRMTuple();
@@ -56,9 +57,10 @@ namespace Chloe.Mapper
         }
     }
 
-    class MRM : IMRM
+    internal class MRM : IMRM
     {
-        Action<object, IDataReader, int> _mapper;
+        private Action<object, IDataReader, int> _mapper;
+
         public MRM(MemberInfo member)
         {
             this._mapper = DelegateGenerator.CreateSetValueFromReaderDelegate(member);
@@ -70,10 +72,11 @@ namespace Chloe.Mapper
         }
     }
 
-    class MRM2 : IMRM
+    internal class MRM2 : IMRM
     {
-        MemberValueSetter _valueSetter;
-        MappingType _mappingType;
+        private MemberValueSetter _valueSetter;
+        private MappingType _mappingType;
+
         public MRM2(MemberInfo member, MappingType mappingType)
         {
             this._mappingType = mappingType;

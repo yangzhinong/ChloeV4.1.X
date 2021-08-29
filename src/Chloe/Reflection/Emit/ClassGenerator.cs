@@ -8,12 +8,12 @@ using System.Globalization;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Chloe.Core.Emit
+namespace Chloe.Reflection.Emit
 {
     public static class ClassGenerator
     {
-        static readonly Dictionary<Assembly, ModuleBuilder> _moduleBuilders = new Dictionary<Assembly, ModuleBuilder>();
-        static int _sequenceNumber = 0;
+        private static readonly Dictionary<Assembly, ModuleBuilder> _moduleBuilders = new Dictionary<Assembly, ModuleBuilder>();
+        private static int _sequenceNumber = 0;
 
         public static Type CreateMRMType(MemberInfo propertyOrField)
         {
@@ -28,7 +28,7 @@ namespace Chloe.Core.Emit
                 {
                     if (!_moduleBuilders.TryGetValue(assembly, out moduleBuilder))
                     {
-                        var assemblyName = new AssemblyName(String.Format(CultureInfo.InvariantCulture, "ChloeMRMs-{0}", assembly.FullName));
+                        var assemblyName = new AssemblyName(string.Format(CultureInfo.InvariantCulture, "ChloeMRMs-{0}", assembly.FullName));
                         assemblyName.Version = new Version(1, 0, 0, 0);
 
                         AssemblyBuilder assemblyBuilder;
@@ -58,7 +58,7 @@ namespace Chloe.Core.Emit
             il.Emit(OpCodes.Ldarg_S, parameStartIndex);//将第一个参数 object 对象加载到栈顶
             il.Emit(OpCodes.Castclass, propertyOrField.DeclaringType);//将 object 对象转换为强类型对象 此时栈顶为强类型的对象
 
-            var readerMethod = DataReaderConstant.GetReaderMethod(ReflectionExtension.GetMemberType(propertyOrField));
+            var readerMethod = DataReaderConstant.GetReaderMethod(propertyOrField.GetMemberType());
 
             //ordinal
             il.Emit(OpCodes.Ldarg_S, parameStartIndex + 1);    //加载参数DataReader

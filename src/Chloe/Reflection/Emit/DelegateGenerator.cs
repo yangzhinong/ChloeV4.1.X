@@ -8,7 +8,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Chloe.Core.Emit
+namespace Chloe.Reflection.Emit
 {
     public static class DelegateGenerator
     {
@@ -87,6 +87,7 @@ namespace Chloe.Core.Emit
 
             throw new ArgumentException();
         }
+
         public static MemberValueSetter CreateValueSetter(PropertyInfo propertyInfo)
         {
             var p = Expression.Parameter(typeof(object), "instance");
@@ -104,6 +105,7 @@ namespace Chloe.Core.Emit
 
             return ret;
         }
+
         public static MemberValueSetter CreateValueSetter(FieldInfo fieldInfo)
         {
             var p = Expression.Parameter(typeof(object), "instance");
@@ -121,13 +123,14 @@ namespace Chloe.Core.Emit
 
             return ret;
         }
+
         public static MemberValueGetter CreateValueGetter(MemberInfo propertyOrField)
         {
             var p = Expression.Parameter(typeof(object), "a");
             var instance = Expression.Convert(p, propertyOrField.DeclaringType);
             var memberAccess = Expression.MakeMemberAccess(instance, propertyOrField);
 
-            Type type = ReflectionExtension.GetMemberType(propertyOrField);
+            Type type = propertyOrField.GetMemberType();
 
             Expression body = memberAccess;
             if (type.IsValueType)

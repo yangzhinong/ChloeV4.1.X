@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Chloe.Core.Emit
+namespace Chloe.Reflection.Emit
 {
     public static class EmitHelper
     {
@@ -16,11 +16,12 @@ namespace Chloe.Core.Emit
             }
             else if (memberType == MemberTypes.Field)
             {
-                il.Emit(OpCodes.Stfld, ((FieldInfo)member));//给字段赋值
+                il.Emit(OpCodes.Stfld, (FieldInfo)member);//给字段赋值
             }
             else
                 throw new NotSupportedException();
         }
+
 #if netcore
         public static Type CreateType(this TypeBuilder typeBuilder)
         {
