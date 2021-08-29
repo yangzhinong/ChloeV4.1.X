@@ -7,30 +7,38 @@ using System.Data;
 
 namespace Chloe.Data
 {
-    abstract class AdoSession : IAdoSession
+    internal abstract class AdoSession : IAdoSession
     {
-        bool _disposed = false;
+        private bool _disposed = false;
 
         public AdoSession()
         {
         }
 
         public abstract IDbConnection DbConnection { get; }
+
         /// <summary>
         /// 如果未开启事务，则返回 null
         /// </summary>
         public virtual IDbTransaction DbTransaction { get; protected set; }
+
         public virtual bool IsInTransaction { get; protected set; } = false;
+
         /// <summary>
         /// 命令执行超时时间，单位 seconds
         /// </summary>
         public virtual int CommandTimeout { get; set; } = 30;
 
         public event AdoEventHandler<IDataReader> OnReaderExecuting;
+
         public event AdoEventHandler<IDataReader> OnReaderExecuted;
+
         public event AdoEventHandler<int> OnNonQueryExecuting;
+
         public event AdoEventHandler<int> OnNonQueryExecuted;
+
         public event AdoEventHandler<object> OnScalarExecuting;
+
         public event AdoEventHandler<object> OnScalarExecuted;
 
         public virtual void Activate()
@@ -73,6 +81,7 @@ namespace Chloe.Data
 
             this.IsInTransaction = true;
         }
+
         public virtual void CommitTransaction()
         {
             if (!this.IsInTransaction)
@@ -83,6 +92,7 @@ namespace Chloe.Data
             this.ReleaseTransaction();
             this.Complete();
         }
+
         public virtual void RollbackTransaction()
         {
             if (!this.IsInTransaction)
@@ -98,6 +108,7 @@ namespace Chloe.Data
         {
             return this.ExecuteReader(cmdText, parameters, cmdType, CommandBehavior.Default);
         }
+
         public virtual IDataReader ExecuteReader(string cmdText, DbParam[] parameters, CommandType cmdType, CommandBehavior behavior)
         {
             this.CheckDisposed();
@@ -131,6 +142,7 @@ namespace Chloe.Data
 
             return dbCommandInterceptionContext.Result;
         }
+
         public int ExecuteNonQuery(string cmdText, DbParam[] parameters, CommandType cmdType)
         {
             this.CheckDisposed();
@@ -172,6 +184,7 @@ namespace Chloe.Data
                     cmd.Dispose();
             }
         }
+
         public object ExecuteScalar(string cmdText, DbParam[] parameters, CommandType cmdType)
         {
             this.CheckDisposed();
@@ -222,6 +235,7 @@ namespace Chloe.Data
             this.Dispose(true);
             this._disposed = true;
         }
+
         protected virtual void Dispose(bool disposing)
         {
             if (this.DbTransaction != null)
@@ -287,8 +301,9 @@ namespace Chloe.Data
                     }
 
                     IDbDataParameter parameter = cmd.CreateParameter();
-                    Infrastructure.MappingType mappingType = MappingTypeSystem.GetMappingType(parameterType);
-                    mappingType.DbParameterAssembler.SetupParameter(parameter, param);
+                    Infrastructure.MappingType mappingType;
+                    IDbParameterAssembler dbParameterAssembler = MappingTypeSystem.IsMappingType(parameterType, out mappingType) ? mappingType.DbParameterAssembler : DbParameterAssembler.Default;
+                    dbParameterAssembler.SetupParameter(parameter, param);
 
                     cmd.Parameters.Add(parameter);
 
@@ -306,14 +321,14 @@ namespace Chloe.Data
             return cmd;
         }
 
-        void ReleaseTransaction()
+        private void ReleaseTransaction()
         {
             this.DbTransaction.Dispose();
             this.DbTransaction = null;
             this.IsInTransaction = false;
         }
 
-        void CheckDisposed()
+        private void CheckDisposed()
         {
             if (this._disposed)
             {
@@ -321,11 +336,9 @@ namespace Chloe.Data
             }
         }
 
-
-        static ChloeException WrapException(Exception ex)
+        private static ChloeException WrapException(Exception ex)
         {
             return new ChloeException($"An exception occurred while executing DbCommand. For details please see the inner exception. {ex.Message}", ex);
         }
     }
-
 }
