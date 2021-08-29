@@ -63,7 +63,7 @@ namespace Chloe.Descriptors
                 return this._expressionParser;
             }
 
-            return new DefaultExpressionParser(this, explicitDbTable);
+            return new DefaultExpressionParser(this, dbTable);
         }
 
         public bool HasPrimaryKey()
