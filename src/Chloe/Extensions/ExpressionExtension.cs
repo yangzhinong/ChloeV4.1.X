@@ -10,20 +10,23 @@ namespace Chloe.Extensions
     {
         public static BinaryExpression Assign(MemberInfo propertyOrField, Expression instance, Expression value)
         {
-            PropertyInfo propertyInfo = propertyOrField as PropertyInfo;
-            if (propertyInfo != null)
+            var member = MakeMemberExpression(propertyOrField, instance);
+            var setValue = Expression.Assign(member, value);
+            return setValue;
+        }
+
+        public static MemberExpression MakeMemberExpression(MemberInfo propertyOrField, Expression instance)
+        {
+            if (propertyOrField.MemberType == MemberTypes.Property)
             {
-                var pro = Expression.Property(instance, propertyInfo);
-                var setValue = Expression.Assign(pro, value);
-                return setValue;
+                var prop = Expression.Property(instance, (PropertyInfo)propertyOrField);
+                return prop;
             }
 
-            FieldInfo fieldInfo = propertyOrField as FieldInfo;
-            if (fieldInfo != null)
+            if (propertyOrField.MemberType == MemberTypes.Field)
             {
-                var field = Expression.Field(instance, fieldInfo);
-                var setValue = Expression.Assign(field, value);
-                return setValue;
+                var field = Expression.Field(instance, (FieldInfo)propertyOrField);
+                return field;
             }
 
             throw new ArgumentException();
@@ -50,16 +53,18 @@ namespace Chloe.Extensions
             ParameterExpression p;
             return IsDerivedFromParameter(exp, out p);
         }
+
         internal static bool IsDerivedFromParameter(this MemberExpression exp, out ParameterExpression p)
         {
             p = null;
-            Expression prevExp = exp.Expression;
-            MemberExpression memberExp = prevExp as MemberExpression;
-            while (memberExp != null)
+
+            MemberExpression memberExp = exp;
+            Expression prevExp;
+            do
             {
                 prevExp = memberExp.Expression;
                 memberExp = prevExp as MemberExpression;
-            }
+            } while (memberExp != null);
 
             if (prevExp == null)/* 静态属性访问 */
                 return false;
@@ -106,11 +111,12 @@ namespace Chloe.Extensions
         public static Stack<MemberExpression> Reverse(this MemberExpression exp)
         {
             var stack = new Stack<MemberExpression>();
-            stack.Push(exp);
-            while ((exp = exp.Expression as MemberExpression) != null)
+            do
             {
                 stack.Push(exp);
-            }
+                exp = exp.Expression as MemberExpression;
+            } while (exp != null);
+
             return stack;
         }
 
@@ -136,7 +142,7 @@ namespace Chloe.Extensions
             return ret;
         }
 
-        static object WrapValue(object value)
+        private static object WrapValue(object value)
         {
             Type valueType = value.GetType();
 

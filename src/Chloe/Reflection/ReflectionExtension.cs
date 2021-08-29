@@ -31,6 +31,17 @@ namespace Chloe.Reflection
             return false;
         }
 
+        public static bool HasPublicGetter(this MemberInfo propertyOrField)
+        {
+            if (propertyOrField.MemberType == MemberTypes.Property)
+                return ((PropertyInfo)propertyOrField).GetGetMethod() != null;
+
+            if (propertyOrField.MemberType == MemberTypes.Field && (propertyOrField as FieldInfo).IsPublic)
+                return true;
+
+            return false;
+        }
+
         public static void SetMemberValue(this MemberInfo propertyOrField, object obj, object value)
         {
             if (propertyOrField.MemberType == MemberTypes.Property)
@@ -40,6 +51,20 @@ namespace Chloe.Reflection
             else
                 throw new ArgumentException();
         }
+
+        public static void FastSetMemberValue(this MemberInfo propertyOrField, object obj, object value)
+        {
+            MemberValueSetter setter = MemberValueSetterContainer.GetMemberValueSetter(propertyOrField);
+            setter(obj, value);
+            return;
+        }
+
+        public static object FastGetMemberValue(this MemberInfo propertyOrField, object obj)
+        {
+            MemberValueGetter getter = MemberValueGetterContainer.GetMemberValueGetter(propertyOrField);
+            return getter(obj);
+        }
+
         public static object GetMemberValue(this MemberInfo propertyOrField, object obj)
         {
             if (propertyOrField.MemberType == MemberTypes.Property)
@@ -75,6 +100,7 @@ namespace Chloe.Reflection
 
             return propertyOrField;
         }
+
         public static bool CanNull(this Type type)
         {
             if (type.IsNullable())
@@ -85,16 +111,19 @@ namespace Chloe.Reflection
 
             return true;
         }
+
         public static bool IsNullable(this Type type)
         {
             Type underlyingType;
             return IsNullable(type, out underlyingType);
         }
+
         public static bool IsNullable(this Type type, out Type underlyingType)
         {
             underlyingType = Nullable.GetUnderlyingType(type);
             return underlyingType != null;
         }
+
         public static Type GetUnderlyingType(this Type type)
         {
             Type underlyingType;
@@ -103,6 +132,7 @@ namespace Chloe.Reflection
 
             return underlyingType;
         }
+
         public static bool IsAnonymousType(this Type type)
         {
             string typeName = type.Name;
@@ -132,22 +162,27 @@ namespace Chloe.Reflection
         }
 
 #if net40
+
         public static IEnumerable<Attribute> GetCustomAttributes(this MemberInfo member)
         {
             return member.GetCustomAttributes<Attribute>();
         }
+
         public static IEnumerable<TAttribute> GetCustomAttributes<TAttribute>(this MemberInfo member)
         {
             return member.GetCustomAttributes(typeof(TAttribute), false).Cast<TAttribute>();
         }
+
         public static TAttribute GetCustomAttribute<TAttribute>(this MemberInfo member)
         {
             return member.GetCustomAttributes<TAttribute>().FirstOrDefault();
         }
+
         public static bool IsDefined(this MemberInfo member, Type attributeType)
         {
             return member.IsDefined(attributeType, false);
         }
+
 #endif
     }
 }

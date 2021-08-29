@@ -9,7 +9,8 @@ namespace Chloe.Core.Visitors
 {
     public class ExpressionEvaluator : ExpressionVisitor<object>
     {
-        static ExpressionEvaluator _evaluator = new ExpressionEvaluator();
+        private static ExpressionEvaluator _evaluator = new ExpressionEvaluator();
+
         public static object Evaluate(Expression exp)
         {
             return _evaluator.Visit(exp);
@@ -33,8 +34,9 @@ namespace Chloe.Core.Visitors
                 }
             }
 
-            return exp.Member.GetMemberValue(instance);
+            return exp.Member.FastGetMemberValue(instance);
         }
+
         protected override object VisitUnary_Not(UnaryExpression exp)
         {
             var operandValue = this.Visit(exp.Operand);
@@ -44,6 +46,7 @@ namespace Chloe.Core.Visitors
 
             return true;
         }
+
         protected override object VisitUnary_Convert(UnaryExpression exp)
         {
             object operandValue = this.Visit(exp.Operand);
@@ -116,15 +119,18 @@ namespace Chloe.Core.Visitors
 
             throw new NotSupportedException(string.Format("Does not support the type '{0}' converted to type '{1}'.", operandValueType.FullName, exp.Type.FullName));
         }
+
         protected override object VisitUnary_Quote(UnaryExpression exp)
         {
             var e = ExpressionExtension.StripQuotes(exp);
             return e;
         }
+
         protected override object VisitConstant(ConstantExpression exp)
         {
             return exp.Value;
         }
+
         protected override object VisitMethodCall(MethodCallExpression exp)
         {
             object instance = null;
@@ -142,12 +148,14 @@ namespace Chloe.Core.Visitors
 
             return exp.Method.Invoke(instance, arguments);
         }
+
         protected override object VisitNew(NewExpression exp)
         {
             object[] arguments = exp.Arguments.Select(a => this.Visit(a)).ToArray();
 
             return exp.Constructor.Invoke(arguments);
         }
+
         protected override object VisitNewArray(NewArrayExpression exp)
         {
             Array arr = Array.CreateInstance(exp.Type.GetElementType(), exp.Expressions.Count);
@@ -159,6 +167,7 @@ namespace Chloe.Core.Visitors
 
             return arr;
         }
+
         protected override object VisitMemberInit(MemberInitExpression exp)
         {
             object instance = this.Visit(exp.NewExpression);
@@ -180,6 +189,7 @@ namespace Chloe.Core.Visitors
 
             return instance;
         }
+
         protected override object VisitListInit(ListInitExpression exp)
         {
             object instance = this.Visit(exp.NewExpression);

@@ -5,14 +5,22 @@ namespace Chloe.Reflection
 {
     public class MemberValueSetterContainer
     {
-        static readonly System.Collections.Concurrent.ConcurrentDictionary<MemberInfo, MemberValueSetter> Cache = new System.Collections.Concurrent.ConcurrentDictionary<MemberInfo, MemberValueSetter>();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<MemberInfo, MemberValueSetter> Cache = new System.Collections.Concurrent.ConcurrentDictionary<MemberInfo, MemberValueSetter>();
+
         public static MemberValueSetter GetMemberValueSetter(MemberInfo memberInfo)
         {
-            MemberValueSetter setter = Cache.GetOrAdd(memberInfo, member =>
+            MemberValueSetter setter = null;
+            if (!Cache.TryGetValue(memberInfo, out setter))
             {
-                return DelegateGenerator.CreateValueSetter(member);
-            });
-
+                lock (memberInfo)
+                {
+                    if (!Cache.TryGetValue(memberInfo, out setter))
+                    {
+                        setter = DelegateGenerator.CreateValueSetter(memberInfo);
+                        Cache.GetOrAdd(memberInfo, setter);
+                    }
+                }
+            }
             return setter;
         }
     }

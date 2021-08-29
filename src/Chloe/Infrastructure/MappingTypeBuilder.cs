@@ -5,7 +5,8 @@ namespace Chloe.Infrastructure
 {
     public class MappingTypeBuilder
     {
-        MappingType _mappingType;
+        private MappingType _mappingType;
+
         public MappingTypeBuilder(MappingType mappingType)
         {
             this._mappingType = mappingType;
@@ -16,6 +17,7 @@ namespace Chloe.Infrastructure
             this._mappingType.DbType = dbType;
             return this;
         }
+
         public MappingTypeBuilder HasDbValueConverter(IDbValueConverter dbValueConverter)
         {
             if (dbValueConverter == null)
@@ -24,6 +26,7 @@ namespace Chloe.Infrastructure
             this._mappingType.DbValueConverter = dbValueConverter;
             return this;
         }
+
         public MappingTypeBuilder HasDbValueConverter(Func<object, object> dbValueConverter)
         {
             if (dbValueConverter == null)
@@ -32,7 +35,8 @@ namespace Chloe.Infrastructure
             this._mappingType.DbValueConverter = new InternalDbValueConverter(dbValueConverter);
             return this;
         }
-        public MappingTypeBuilder HasDbValueConverter<TConverter>()
+
+        public MappingTypeBuilder HasDbValueConverter<TConverter>() where TConverter : IDbValueConverter
         {
             IDbValueConverter dbValueConverter = Activator.CreateInstance(typeof(TConverter)) as IDbValueConverter;
             return this.HasDbValueConverter(dbValueConverter);
@@ -46,7 +50,8 @@ namespace Chloe.Infrastructure
             this._mappingType.DbParameterAssembler = dbParameterAssembler;
             return this;
         }
-        public MappingTypeBuilder HasDbParameterAssembler<TAssembler>()
+
+        public MappingTypeBuilder HasDbParameterAssembler<TAssembler>() where TAssembler : IDbParameterAssembler
         {
             IDbParameterAssembler dbParameterAssembler = Activator.CreateInstance(typeof(TAssembler)) as IDbParameterAssembler;
             return this.HasDbParameterAssembler(dbParameterAssembler);

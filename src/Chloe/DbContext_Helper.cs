@@ -11,26 +11,28 @@ namespace Chloe
 {
     public abstract partial class DbContext : IDbContext, IDisposable
     {
-        static MethodInfo _saveMethod;
+        private static MethodInfo _saveMethod;
+
         static DbContext()
         {
             DbContext dbContext = null;
             Expression<Func<string>> e = () => dbContext.Save<string>("", null);
             MethodInfo method = (e.Body as MethodCallExpression).Method;
-            _saveMethod = method;
+            _saveMethod = method.GetGenericMethodDefinition();
         }
-        static KeyValuePairList<JoinType, Expression> ResolveJoinInfo(LambdaExpression joinInfoExp)
+
+        private static KeyValuePairList<JoinType, Expression> ResolveJoinInfo(LambdaExpression joinInfoExp)
         {
             /*
              * Usage:
-             * var view = context.JoinQuery<User, City, Province, User, City>((user, city, province, user1, city1) => new object[] 
-             * { 
-             *     JoinType.LeftJoin, user.CityId == city.Id, 
+             * var view = context.JoinQuery<User, City, Province, User, City>((user, city, province, user1, city1) => new object[]
+             * {
+             *     JoinType.LeftJoin, user.CityId == city.Id,
              *     JoinType.RightJoin, city.ProvinceId == province.Id,
              *     JoinType.InnerJoin,user.Id==user1.Id,
              *     JoinType.FullJoin,city.Id==city1.Id
              * }).Select((user, city, province, user1, city1) => new { User = user, City = city, Province = province, User1 = user1, City1 = city1 });
-             * 
+             *
              * To resolve join infomation:
              * JoinType.LeftJoin, user.CityId == city.Id               index of joinType is 0
              * JoinType.RightJoin, city.ProvinceId == province.Id      index of joinType is 2
@@ -91,9 +93,10 @@ namespace Chloe
 
             return ret;
         }
-        static MethodInfo GetSaveMethod(Type entityType)
+
+        private static MethodInfo GetSaveMethod(Type entityType)
         {
-            MethodInfo method = _saveMethod.GetGenericMethodDefinition().MakeGenericMethod(entityType);
+            MethodInfo method = _saveMethod.MakeGenericMethod(entityType);
             return method;
         }
     }

@@ -19,6 +19,7 @@ namespace Chloe
             if (obj == null)
                 throw new ArgumentNullException(paramName);
         }
+
         public static bool AreEqual(object obj1, object obj2)
         {
             if (obj1 == null && obj2 == null)
@@ -36,12 +37,14 @@ namespace Chloe
 
             return object.Equals(obj1, obj2);
         }
+
         public static DbMethodCallExpression MakeNextValueForSequenceDbExpression(PrimitivePropertyDescriptor propertyDescriptor, string defaultSequenceSchema)
         {
             string sequenceSchema = propertyDescriptor.Definition.SequenceSchema;
             sequenceSchema = string.IsNullOrEmpty(sequenceSchema) ? defaultSequenceSchema : sequenceSchema;
             return MakeNextValueForSequenceDbExpression(propertyDescriptor.PropertyType, propertyDescriptor.Definition.SequenceName, sequenceSchema);
         }
+
         public static DbMethodCallExpression MakeNextValueForSequenceDbExpression(Type retType, string sequenceName, string sequenceSchema)
         {
             MethodInfo nextValueForSequenceMethod = PublicConstants.MethodInfo_Sql_NextValueForSequence.MakeGenericMethod(retType);
@@ -50,6 +53,7 @@ namespace Chloe
             DbMethodCallExpression getNextValueForSequenceExp = new DbMethodCallExpression(null, nextValueForSequenceMethod, arguments);
             return getNextValueForSequenceExp;
         }
+
         public static object ConvertObjectType(object obj, Type conversionType)
         {
             if (obj == null)
@@ -73,6 +77,7 @@ namespace Chloe
             ret.AddRange(source);
             return ret;
         }
+
         public static List<T> CloneAndAppendOne<T>(List<T> source, T t)
         {
             List<T> ret = new List<T>(source.Count + 1);
@@ -80,11 +85,13 @@ namespace Chloe
             ret.Add(t);
             return ret;
         }
+
         public static Dictionary<TKey, TValue> Clone<TKey, TValue>(Dictionary<TKey, TValue> source)
         {
             Dictionary<TKey, TValue> ret = Clone<TKey, TValue>(source, source.Count);
             return ret;
         }
+
         public static Dictionary<TKey, TValue> Clone<TKey, TValue>(Dictionary<TKey, TValue> source, int capacity)
         {
             Dictionary<TKey, TValue> ret = new Dictionary<TKey, TValue>(capacity);
@@ -123,7 +130,7 @@ namespace Chloe
                     continue;
                 }
 
-                object value = ReflectionExtension.GetMemberValue(prop, parameter);
+                object value = ReflectionExtension.FastGetMemberValue(prop, parameter);
 
                 string paramName = dbContext.DatabaseProvider.CreateParameterName(prop.Name);
 
