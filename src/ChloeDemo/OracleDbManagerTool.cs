@@ -29,6 +29,20 @@ namespace ChloeDemo
             }
         }
 
+        public void DropTable<TEntity>()
+        {
+            Type entityType = typeof(TEntity);
+            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(entityType);
+
+            string tableName = typeDescriptor.Table.Name;
+            string schcmeName = typeDescriptor.Table.Schema;
+
+            if (_db.Query<SysDbModel.All_Tables>().Any(x => x.Owner == schcmeName && x.Table_Name == tableName))
+            {
+                _db.Session.ExecuteNonQuery($"drop table {QuoteSchemaAndName(schcmeName, tableName)}");
+            }
+        }
+
         private List<string> CreateTableScript(Type entityType)
         {
             List<string> sqlList = new List<string>();
@@ -39,7 +53,7 @@ namespace ChloeDemo
             if (!tableExists)
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append($"CREATE TABLE {this.QuoteName(tableName)}(");
+                sb.Append($"CREATE TABLE {this.QuoteSchemaAndName(schcmeName, tableName)}(");
 
                 string c = "";
                 foreach (var propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
@@ -109,12 +123,26 @@ end;";
             return string.Concat("\"", name.ToUpper(), "\"");
         }
 
+        private string QuoteSchemaAndName(string schema, string name)
+        {
+            if (string.IsNullOrWhiteSpace(schema))
+            {
+                return QuoteName(name);
+            }
+            return $"{QuoteName(schema)}.{QuoteName(name)}";
+        }
+
         private string BuildColumnPart(PrimitivePropertyDescriptor propertyDescriptor)
         {
-            string part = $"{this.QuoteName(propertyDescriptor.Column.Name)} {this.GetMappedDbTypeName(propertyDescriptor)}";
+            var colTypeString = this.GetMappedDbTypeName(propertyDescriptor);
+            string part = $"{this.QuoteName(propertyDescriptor.Column.Name)} {colTypeString}";
 
             if (!propertyDescriptor.IsNullable)
             {
+                if (colTypeString.StartsWith("NUM") || colTypeString.StartsWith("BINARY_"))
+                {
+                    part += " DEFAULT 0 ";
+                }
                 part += " NOT NULL";
             }
             else
@@ -136,7 +164,7 @@ end;";
             if (type == typeof(string))
             {
                 int stringLength = propertyDescriptor.Column.Size ?? 2000;
-                return $"NVARCHAR2({stringLength})";
+                return $"VARCHAR2({stringLength} BYTE)";
             }
 
             if (type == typeof(int))

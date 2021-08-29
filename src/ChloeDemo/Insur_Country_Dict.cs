@@ -1,6 +1,7 @@
 ﻿using Chloe.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -27,7 +28,7 @@ namespace ChloeDemo
         /// 长度=6
         /// Nullable=0
         /// </summary>
-        [Column(Size = 6)]
+        [Column(DbType = DbType.AnsiString)]
         public string Country_Code { get; set; }
 
         /// <summary>

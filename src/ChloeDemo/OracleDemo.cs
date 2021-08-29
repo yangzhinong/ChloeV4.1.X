@@ -16,9 +16,9 @@ namespace ChloeDemo
 
         public static void Run()
         {
-            //var o = new OracleDbManagerTool(context);
-
-            //o.InitTable<Insur_Country_Dict>();
+            var o = new OracleDbManagerTool(context);
+            o.DropTable<Insur_Country_Dict>();
+            o.InitTable<Insur_Country_Dict>();
 
             BasicQuery();
             JoinQuery();
