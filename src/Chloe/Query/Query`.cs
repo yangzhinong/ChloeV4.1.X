@@ -2,6 +2,7 @@
 using Chloe.Infrastructure;
 using Chloe.Query.Internals;
 using Chloe.Query.QueryExpressions;
+using Chloe.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -136,7 +137,7 @@ namespace Chloe.Query
             var includeMethodArgument = this.MakeIncludeMethodArgument(includeMethod, typeof(T), propertyDescriptor.Property);
 
             // query.Include<property>(a => a.property)
-            var includableQuery = includeMethod.Invoke(query, new object[] { includeMethodArgument });
+            var includableQuery = includeMethod.FastInvoke(query, new object[] { includeMethodArgument });
             return includableQuery;
         }
 
@@ -159,7 +160,7 @@ namespace Chloe.Query
             var includeMethodArgument = this.MakeIncludeMethodArgument(thenIncludeMethod, lambdaParameterType, propertyDescriptor.Property);
 
             // includableQuery.ThenInclude<property>(a => a.property)
-            includableQuery = thenIncludeMethod.Invoke(includableQuery, new object[] { includeMethodArgument });
+            includableQuery = thenIncludeMethod.FastInvoke(includableQuery, new object[] { includeMethodArgument });
             return includableQuery;
         }
 

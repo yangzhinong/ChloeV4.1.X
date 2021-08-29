@@ -80,6 +80,12 @@ namespace Chloe.Reflection
             return method.Invoke(obj, parameters ?? EmptyArray);
         }
 
+        public static object FastInvoke(this MethodInfo method, object obj, params object[] parameters)
+        {
+            MethodInvoker invoker = MethodInvokerContainer.GetMethodInvoker(method);
+            return invoker(obj, parameters);
+        }
+
         public static MemberInfo AsReflectedMemberOf(this MemberInfo propertyOrField, Type type)
         {
             if (propertyOrField.ReflectedType != type)

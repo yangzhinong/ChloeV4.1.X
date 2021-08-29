@@ -150,5 +150,76 @@ namespace Chloe.Reflection.Emit
             var ret = Expression.Lambda<Func<object>>(body).Compile();
             return ret;
         }
+
+        public static MethodInvoker CreateMethodInvoker(MethodInfo method)
+        {
+            List<ParameterExpression> parameterExps = new List<ParameterExpression>();
+            ParameterExpression p = Expression.Parameter(typeof(object), "instance");
+            parameterExps.Add(p);
+
+            ParameterExpression pParameterArray = Expression.Parameter(typeof(object[]), "parameters");
+            parameterExps.Add(pParameterArray);
+
+            Expression instance = null;
+            if (!method.IsStatic)
+            {
+                instance = Expression.Convert(p, method.ReflectedType);
+            }
+
+            ParameterInfo[] parameters = method.GetParameters();
+            List<Expression> argumentExps = new List<Expression>(parameters.Length);
+
+            var getItemMethod = typeof(object[]).GetMethod("GetValue", new Type[] { typeof(int) });
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                ParameterInfo parameter = parameters[i];
+
+                //object parameter = parameters[i];
+                var parameterExp = Expression.Call(pParameterArray, getItemMethod, Expression.Constant(i));
+                //T argument = (T)parameter;
+                var argumentExp = Expression.Convert(parameterExp, parameter.ParameterType);
+                argumentExps.Add(argumentExp);
+            }
+
+            //instance.Method(parameters)
+            MethodCallExpression methodCallExp = Expression.Call(instance, method, argumentExps);
+
+            MethodInvoker ret;
+            if (method.ReturnType == typeof(void))
+            {
+                var act = Expression.Lambda<Action<object, object[]>>(methodCallExp, parameterExps).Compile();
+                ret = MakeMethodInvoker(act);
+            }
+            else
+            {
+                ret = Expression.Lambda<MethodInvoker>(methodCallExp, parameterExps).Compile();
+                ret = MakeMethodInvoker(ret);
+            }
+
+            return ret;
+        }
+
+        private static MethodInvoker MakeMethodInvoker(Action<object, object[]> act)
+        {
+            MethodInvoker ret = (object instance, object[] parameters) =>
+            {
+                act(instance, parameters ?? ReflectionExtension.EmptyArray);
+                return null;
+            };
+
+            return ret;
+        }
+
+        private static MethodInvoker MakeMethodInvoker(MethodInvoker methodInvoker)
+        {
+            MethodInvoker ret = (object instance, object[] parameters) =>
+            {
+                object val = methodInvoker(instance, parameters ?? ReflectionExtension.EmptyArray);
+                return val;
+            };
+
+            return ret;
+        }
     }
 }

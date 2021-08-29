@@ -16,15 +16,15 @@ namespace ChloeDemo
 
         public static void Run()
         {
-            //BasicQuery();
-            //JoinQuery();
-            //AggregateQuery();
-            //GroupQuery();
-            //ComplexQuery();
-            //QueryWithNavigation();
-            //Insert();
-            //Update();
-            //Delete();
+            BasicQuery();
+            JoinQuery();
+            AggregateQuery();
+            GroupQuery();
+            ComplexQuery();
+            QueryWithNavigation();
+            Insert();
+            Update();
+            Delete();
             Method();
             ExecuteCommandText();
             DoWithTransaction();
