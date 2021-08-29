@@ -77,44 +77,16 @@ namespace Chloe.Reflection.Emit
 
         public static MemberValueSetter CreateValueSetter(MemberInfo propertyOrField)
         {
-            PropertyInfo propertyInfo = propertyOrField as PropertyInfo;
-            if (propertyInfo != null)
-                return CreateValueSetter(propertyInfo);
+            ParameterExpression p = Expression.Parameter(typeof(object), "instance");
+            ParameterExpression pValue = Expression.Parameter(typeof(object), "value");
+            Expression instance = null;
+            if (!propertyOrField.IsStaticMember())
+            {
+                instance = Expression.Convert(p, propertyOrField.DeclaringType);
+            }
 
-            FieldInfo fieldInfo = propertyOrField as FieldInfo;
-            if (fieldInfo != null)
-                return CreateValueSetter(fieldInfo);
-
-            throw new ArgumentException();
-        }
-
-        public static MemberValueSetter CreateValueSetter(PropertyInfo propertyInfo)
-        {
-            var p = Expression.Parameter(typeof(object), "instance");
-            var pValue = Expression.Parameter(typeof(object), "value");
-            var instance = Expression.Convert(p, propertyInfo.DeclaringType);
-            var value = Expression.Convert(pValue, propertyInfo.PropertyType);
-
-            var pro = Expression.Property(instance, propertyInfo);
-            var setValue = Expression.Assign(pro, value);
-
-            Expression body = setValue;
-
-            var lambda = Expression.Lambda<MemberValueSetter>(body, p, pValue);
-            MemberValueSetter ret = lambda.Compile();
-
-            return ret;
-        }
-
-        public static MemberValueSetter CreateValueSetter(FieldInfo fieldInfo)
-        {
-            var p = Expression.Parameter(typeof(object), "instance");
-            var pValue = Expression.Parameter(typeof(object), "value");
-            var instance = Expression.Convert(p, fieldInfo.DeclaringType);
-            var value = Expression.Convert(pValue, fieldInfo.FieldType);
-
-            var field = Expression.Field(instance, fieldInfo);
-            var setValue = Expression.Assign(field, value);
+            var value = Expression.Convert(pValue, propertyOrField.GetMemberType());
+            var setValue = ExpressionExtension.Assign(propertyOrField, instance, value);
 
             Expression body = setValue;
 
@@ -126,11 +98,16 @@ namespace Chloe.Reflection.Emit
 
         public static MemberValueGetter CreateValueGetter(MemberInfo propertyOrField)
         {
-            var p = Expression.Parameter(typeof(object), "a");
-            var instance = Expression.Convert(p, propertyOrField.DeclaringType);
+            ParameterExpression p = Expression.Parameter(typeof(object), "a");
+            Expression instance = null;
+            if (!propertyOrField.IsStaticMember())
+            {
+                instance = Expression.Convert(p, propertyOrField.DeclaringType);
+            }
+
             var memberAccess = Expression.MakeMemberAccess(instance, propertyOrField);
 
-            Type type = propertyOrField.GetMemberType();
+            Type type = ReflectionExtension.GetMemberType(propertyOrField);
 
             Expression body = memberAccess;
             if (type.IsValueType)
@@ -193,7 +170,7 @@ namespace Chloe.Reflection.Emit
             }
             else
             {
-                ret = Expression.Lambda<MethodInvoker>(methodCallExp, parameterExps).Compile();
+                ret = Expression.Lambda<MethodInvoker>(Expression.Convert(methodCallExp, typeof(object)), parameterExps).Compile();
                 ret = MakeMethodInvoker(ret);
             }
 

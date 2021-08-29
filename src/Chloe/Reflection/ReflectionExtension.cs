@@ -42,6 +42,20 @@ namespace Chloe.Reflection
             return false;
         }
 
+        public static bool IsStaticMember(this MemberInfo propertyOrField)
+        {
+            if (propertyOrField.MemberType == MemberTypes.Property)
+            {
+                MethodInfo getter = ((PropertyInfo)propertyOrField).GetGetMethod(true);
+                return getter.IsStatic;
+            }
+
+            if (propertyOrField.MemberType == MemberTypes.Field && (propertyOrField as FieldInfo).IsStatic)
+                return true;
+
+            return false;
+        }
+
         public static void SetMemberValue(this MemberInfo propertyOrField, object obj, object value)
         {
             if (propertyOrField.MemberType == MemberTypes.Property)
