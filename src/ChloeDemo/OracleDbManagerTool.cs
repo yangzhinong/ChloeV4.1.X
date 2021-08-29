@@ -70,10 +70,13 @@ namespace ChloeDemo
 
                 if (typeDescriptor.PrimaryKeys.Count > 0)
                 {
-                    string key = typeDescriptor.PrimaryKeys.First().Column.Name;
-                    sqlList.Add($"ALTER TABLE {this.QuoteName(tableName)} ADD CHECK ({this.QuoteName(key)} IS NOT NULL)");
-
-                    sqlList.Add($"ALTER TABLE {this.QuoteName(tableName)} ADD PRIMARY KEY ({this.QuoteName(key)})");
+                    var keys = typeDescriptor.PrimaryKeys.Select(x => x.Column.Name).ToList();
+                    foreach (string key in keys)
+                    {
+                        sqlList.Add($"ALTER TABLE {this.QuoteName(tableName)} ADD CHECK ({this.QuoteName(key)} IS NOT NULL)");
+                    }
+                    var keyQuoteJion = string.Join(",", keys.Select(x => QuoteName(x)));
+                    sqlList.Add($"ALTER TABLE {this.QuoteName(tableName)} ADD PRIMARY KEY ({keyQuoteJion})");
                 }
             }
 
