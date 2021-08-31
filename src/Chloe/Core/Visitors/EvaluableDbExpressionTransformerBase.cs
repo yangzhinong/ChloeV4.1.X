@@ -26,6 +26,7 @@ namespace Chloe.Core.Visitors
         {
             return false;
         }
+
         /// <summary>
         /// 是否可以将 exp.Method 翻译成数据库对应的语法
         /// </summary>
@@ -51,25 +52,12 @@ namespace Chloe.Core.Visitors
                     return exp;
             }
 
-            MemberInfo member = exp.Member;
-
             if (this.CanTranslateToSql(exp))
                 return exp;
 
             return DbExpression.Parameter(exp.Evaluate(), exp.Type);
         }
 
-        public override DbExpression Visit(DbConvertExpression exp)
-        {
-            exp = DbExpression.Convert(exp.Operand.Accept(this), exp.Type);
-
-            if (!IsConstantOrParameter(exp.Operand))
-            {
-                return exp;
-            }
-
-            return DbExpression.Parameter(exp.Evaluate(), exp.Type);
-        }
         public override DbExpression Visit(DbCoalesceExpression exp)
         {
             exp = new DbCoalesceExpression(exp.CheckExpression.Accept(this), exp.ReplacementValue.Accept(this));

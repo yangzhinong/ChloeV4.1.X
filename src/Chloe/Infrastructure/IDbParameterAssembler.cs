@@ -5,12 +5,17 @@ namespace Chloe.Infrastructure
 {
     public interface IDbParameterAssembler
     {
+        /// <summary>
+        /// 修正 IDbDataParameter 对象各项属性。
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <param name="param"></param>
         void SetupParameter(IDbDataParameter parameter, DbParam param);
     }
 
     public class DbParameterAssembler : IDbParameterAssembler
     {
-        static readonly DbType[] DbTypes = {
+        private static readonly DbType[] DbTypes = {
             DbType.Object,
             DbType.Object,
             DbType.Object,
