@@ -16,7 +16,8 @@ namespace Chloe
             MethodInfo_Enumerable_Contains = method_Enumerable_Contains;
         }
 
-        #region Types
+        public static readonly object[] EmptyArray = new object[0];
+
         public static readonly Type TypeOfVoid = typeof(void);
         public static readonly Type TypeOfInt16 = typeof(Int16);
         public static readonly Type TypeOfInt32 = typeof(Int32);
@@ -37,17 +38,11 @@ namespace Chloe
 
         public static readonly Type TypeOfSql = typeof(Sql);
         public static readonly Type TypeOfMath = typeof(Math);
-        #endregion
 
-
-        #region Sql
         public static readonly MethodInfo MethodInfo_Sql_Equals = typeof(Sql).GetMethods().Where(a => a.Name == "Equals" && a.IsStatic && a.IsGenericMethod).First();
         public static readonly MethodInfo MethodInfo_Sql_NotEquals = typeof(Sql).GetMethod("NotEquals");
         public static readonly MethodInfo MethodInfo_Sql_NextValueForSequence = typeof(Sql).GetMethod("NextValueForSequence");
-        #endregion
 
-
-        #region string
         public static readonly PropertyInfo PropertyInfo_String_Length = typeof(string).GetProperty("Length");
 
         public static readonly MethodInfo MethodInfo_String_Concat_String_String = typeof(string).GetMethod("Concat", new Type[] { typeof(string), typeof(string) });
@@ -64,10 +59,7 @@ namespace Chloe
         public static readonly MethodInfo MethodInfo_String_Substring_Int32 = typeof(string).GetMethod("Substring", new Type[] { typeof(Int32) });
         public static readonly MethodInfo MethodInfo_String_Substring_Int32_Int32 = typeof(string).GetMethod("Substring", new Type[] { typeof(Int32), typeof(Int32) });
         public static readonly MethodInfo MethodInfo_String_Replace = typeof(string).GetMethod("Replace", new Type[] { typeof(string), typeof(string) });
-        #endregion
 
-
-        #region DateTime
         public static readonly PropertyInfo PropertyInfo_DateTime_Now = typeof(DateTime).GetProperty("Now");
         public static readonly PropertyInfo PropertyInfo_DateTime_UtcNow = typeof(DateTime).GetProperty("UtcNow");
         public static readonly PropertyInfo PropertyInfo_DateTime_Today = typeof(DateTime).GetProperty("Today");
@@ -82,13 +74,9 @@ namespace Chloe
         public static readonly PropertyInfo PropertyInfo_DateTime_DayOfWeek = typeof(DateTime).GetProperty("DayOfWeek");
 
         public static readonly MethodInfo MethodInfo_DateTime_Subtract_DateTime = typeof(DateTime).GetMethod("Subtract", new Type[] { typeof(DateTime) });
-        #endregion
 
-
-        #region DbExpression
         public static readonly DbParameterExpression DbParameter_1 = DbExpression.Parameter(1);
         public static readonly DbConstantExpression DbConstant_Null_String = DbExpression.Constant(null, typeof(string));
-        #endregion
 
         public static readonly MethodInfo MethodInfo_Guid_NewGuid = typeof(Guid).GetMethod("NewGuid");
 
