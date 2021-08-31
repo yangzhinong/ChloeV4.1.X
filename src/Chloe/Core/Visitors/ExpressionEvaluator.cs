@@ -146,7 +146,7 @@ namespace Chloe.Core.Visitors
 
             object[] arguments = exp.Arguments.Select(a => this.Visit(a)).ToArray();
 
-            return exp.Method.Invoke(instance, arguments);
+            return exp.Method.FastInvoke(instance, arguments);
         }
 
         protected override object VisitNew(NewExpression exp)

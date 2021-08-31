@@ -63,7 +63,7 @@ namespace Chloe.Core.Visitors
 
             object[] arguments = exp.Arguments.Select(a => a.Accept(this)).ToArray();
 
-            return exp.Method.Invoke(instance, arguments);
+            return exp.Method.FastInvoke(instance, arguments);
         }
 
         public override object Visit(DbNotExpression exp)
