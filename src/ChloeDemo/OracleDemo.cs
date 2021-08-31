@@ -19,7 +19,7 @@ namespace ChloeDemo
             var o = new OracleDbManagerTool(context);
             o.DropTable<Insur_Country_Dict>();
             o.InitTable<Insur_Country_Dict>();
-
+            Yzn.BoolTest.Run(context);
             BasicQuery();
             JoinQuery();
             AggregateQuery();
