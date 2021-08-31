@@ -9,10 +9,10 @@ using System.Linq.Expressions;
 
 namespace Chloe.Extension
 {
-    class FieldsResolver
+    internal class FieldsResolver
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="fieldsLambdaExpression">a => new { a.Name, a.Age } or a => new object[] { a.Name, a.Age }</param>
         /// <returns></returns>
@@ -37,9 +37,6 @@ namespace Chloe.Extension
 
                 fieldExps = newArrayExpression.Expressions;
             }
-
-            Type entityType = parameterExpression.Type;
-            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(entityType);
 
             List<string> fields = new List<string>(fieldExps.Count);
 

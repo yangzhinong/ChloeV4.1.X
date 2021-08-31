@@ -16,7 +16,7 @@ namespace Chloe
         static DbContext()
         {
             DbContext dbContext = null;
-            Expression<Func<string>> e = () => dbContext.Save<string>("", null);
+            Expression<Func<string>> e = () => dbContext.Save<string>(string.Empty, null);
             MethodInfo method = (e.Body as MethodCallExpression).Method;
             _saveMethod = method.GetGenericMethodDefinition();
         }

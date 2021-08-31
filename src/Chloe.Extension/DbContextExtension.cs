@@ -18,7 +18,7 @@ namespace Chloe
         }
 
         /// <summary>
-        /// dbContext.Update&lt;User&gt;(user, a =&gt; a.Id == 1)
+        /// dbContext.Update<User>(user, a => a.Id == 1)
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="dbContext"></param>
@@ -57,7 +57,7 @@ namespace Chloe
         }
 
         /// <summary>
-        /// dbContext.UpdateOnly&lt;User&gt;(user, a =&gt; new { a.Name, a.Age })
+        /// dbContext.UpdateOnly<User>(user, a => new { a.Name, a.Age })
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="dbContext"></param>

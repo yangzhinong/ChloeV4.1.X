@@ -17,10 +17,8 @@ namespace Chloe
             this.Value = value;
         }
 
-        public DbParam(string name, object value, Type type)
+        public DbParam(string name, object value, Type type) : this(name, value)
         {
-            this.Name = name;
-            this.Value = value;
             this.Type = type;
         }
 
