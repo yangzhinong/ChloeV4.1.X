@@ -5,10 +5,14 @@ namespace Chloe.Entity
 {
     public class ComplexPropertyBuilder<TProperty, TEntity> : IComplexPropertyBuilder<TProperty, TEntity>
     {
-        public ComplexPropertyBuilder(ComplexProperty property)
+        public ComplexPropertyBuilder(ComplexProperty property, IEntityTypeBuilder<TEntity> declaringBuilder)
         {
             this.Property = property;
+            this.DeclaringBuilder = declaringBuilder;
         }
+
+        IEntityTypeBuilder IComplexPropertyBuilder.DeclaringBuilder { get { return this.DeclaringBuilder; } }
+        public IEntityTypeBuilder<TEntity> DeclaringBuilder { get; }
         public ComplexProperty Property { get; private set; }
 
         public IComplexPropertyBuilder<TProperty, TEntity> WithForeignKey(string foreignKey)

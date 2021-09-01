@@ -76,10 +76,10 @@ namespace Chloe.Entity
             return this.HasQueryFilter((Expression<Func<TEntity, bool>>)filter);
         }
 
-        public IPrimitivePropertyBuilder<TProperty> Property<TProperty>(Expression<Func<TEntity, TProperty>> property)
+        public IPrimitivePropertyBuilder<TProperty, TEntity> Property<TProperty>(Expression<Func<TEntity, TProperty>> property)
         {
             string propertyName = PropertyNameExtractor.Extract(property);
-            IPrimitivePropertyBuilder<TProperty> propertyBuilder = this.Property(propertyName) as IPrimitivePropertyBuilder<TProperty>;
+            IPrimitivePropertyBuilder<TProperty, TEntity> propertyBuilder = this.Property(propertyName) as IPrimitivePropertyBuilder<TProperty, TEntity>;
             return propertyBuilder;
         }
         public IPrimitivePropertyBuilder Property(string property)
@@ -89,7 +89,7 @@ namespace Chloe.Entity
             if (entityProperty == null)
                 throw new ArgumentException($"The mapping property list doesn't contain property named '{property}'.");
 
-            IPrimitivePropertyBuilder propertyBuilder = Activator.CreateInstance(typeof(PrimitivePropertyBuilder<>).MakeGenericType(entityProperty.Property.PropertyType), entityProperty) as IPrimitivePropertyBuilder;
+            IPrimitivePropertyBuilder propertyBuilder = Activator.CreateInstance(typeof(PrimitivePropertyBuilder<,>).MakeGenericType(entityProperty.Property.PropertyType, this.EntityType.Type), entityProperty, this) as IPrimitivePropertyBuilder;
             return propertyBuilder;
         }
 
@@ -110,15 +110,15 @@ namespace Chloe.Entity
                 this.EntityType.ComplexProperties.Add(complexProperty);
             }
 
-            IComplexPropertyBuilder propertyBuilder = Activator.CreateInstance(typeof(ComplexPropertyBuilder<,>).MakeGenericType(complexProperty.Property.PropertyType, typeof(TEntity)), complexProperty) as IComplexPropertyBuilder;
+            IComplexPropertyBuilder propertyBuilder = Activator.CreateInstance(typeof(ComplexPropertyBuilder<,>).MakeGenericType(complexProperty.Property.PropertyType, this.EntityType.Type), complexProperty, this) as IComplexPropertyBuilder;
 
             return propertyBuilder;
         }
 
-        public ICollectionPropertyBuilder<TProperty> HasMany<TProperty>(Expression<Func<TEntity, TProperty>> property)
+        public ICollectionPropertyBuilder<TProperty, TEntity> HasMany<TProperty>(Expression<Func<TEntity, TProperty>> property)
         {
             string propertyName = PropertyNameExtractor.Extract(property);
-            ICollectionPropertyBuilder<TProperty> propertyBuilder = this.HasMany(propertyName) as ICollectionPropertyBuilder<TProperty>;
+            ICollectionPropertyBuilder<TProperty, TEntity> propertyBuilder = this.HasMany(propertyName) as ICollectionPropertyBuilder<TProperty, TEntity>;
             return propertyBuilder;
         }
         public ICollectionPropertyBuilder HasMany(string property)
@@ -132,7 +132,7 @@ namespace Chloe.Entity
                 this.EntityType.CollectionProperties.Add(collectionProperty);
             }
 
-            ICollectionPropertyBuilder propertyBuilder = Activator.CreateInstance(typeof(CollectionPropertyBuilder<>).MakeGenericType(collectionProperty.Property.PropertyType), collectionProperty) as ICollectionPropertyBuilder;
+            ICollectionPropertyBuilder propertyBuilder = Activator.CreateInstance(typeof(CollectionPropertyBuilder<,>).MakeGenericType(collectionProperty.Property.PropertyType, this.EntityType.Type), collectionProperty, this) as ICollectionPropertyBuilder;
             return propertyBuilder;
         }
 
