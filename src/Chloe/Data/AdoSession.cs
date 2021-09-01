@@ -308,7 +308,7 @@ namespace Chloe.Data
                     cmd.Parameters.Add(parameter);
 
                     OutputParameter outputParameter = null;
-                    if (param.Direction == ParamDirection.Output || param.Direction == ParamDirection.InputOutput)
+                    if (param.Direction == ParamDirection.Output || param.Direction == ParamDirection.InputOutput || param.Direction == ParamDirection.ReturnValue)
                     {
                         outputParameter = new OutputParameter(param, parameter);
                         if (outputParameters == null)

@@ -113,6 +113,10 @@ namespace Chloe.Infrastructure
                     parameter.Size = defaultSizeOfStringOutputParameter;
                 }
             }
+            else if (param.Direction == ParamDirection.ReturnValue)
+            {
+                parameter.Direction = ParameterDirection.ReturnValue;
+            }
             else
                 throw new NotSupportedException(string.Format("ParamDirection '{0}' is not supported.", param.Direction));
         }
