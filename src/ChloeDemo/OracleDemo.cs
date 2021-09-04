@@ -20,22 +20,29 @@ namespace ChloeDemo
             IDbCommandInterceptor interceptor = new DbCommandInterceptor();
             DbConfiguration.UseInterceptors(interceptor);
 
-            var o = new Dbmaintain(context);
+            var o = context.Dbmaintain();
             //o.DropTable<Insur_Country_Dict>();
             //o.InitTable<Insur_Country_Dict>();
 
             {
                 //多关键字测试
-                //o.DropTable<Yzn.MutiKeyTest>();
+                o.DropTable<Yzn.MutiKeyTest>();
                 //o.InitTable<Yzn.MutiKeyTest>();
                 o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
 
-                context.Insert(new Yzn.MutiKeyTest()
+                //context.Insert(new Yzn.MutiKeyTest()
+                //{
+                //    Pat = "yzn",
+                //    Visit = 1,
+                //    Val = 99
+                //});
+
+                var list = new List<Yzn.MutiKeyTest>()
                 {
-                    Pat = "yzn",
-                    Visit = 1,
-                    Val = 99
-                });
+                    new Yzn.MutiKeyTest(){ Pat="yzn", Visit= 2, Val=33},
+                    new Yzn.MutiKeyTest(){ Pat="yq", Visit= 1, Val=33},
+                };
+                context.InsertRange(list);
                 //var pat = new Yzn.MutiKeyTest() { Pat = "yzn", Visit = 1, Val = 100 };
                 //context.Update<Yzn.MutiKeyTest>(pat);
 

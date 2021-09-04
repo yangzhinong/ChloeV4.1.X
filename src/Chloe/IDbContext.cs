@@ -173,5 +173,7 @@ namespace Chloe
         void UseTransaction(Action action, IsolationLevel il);
 
         void TrackEntity(object entity);
+
+        IDbmaintain Dbmaintain();
     }
 }

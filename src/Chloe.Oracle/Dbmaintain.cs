@@ -12,7 +12,7 @@ using syscom = System.ComponentModel;
 
 namespace Chloe.Oracle
 {
-    public class Dbmaintain
+    public class Dbmaintain :IDbmaintain
     {
         private IDbContext _db;
 

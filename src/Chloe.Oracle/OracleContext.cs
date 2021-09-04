@@ -459,5 +459,10 @@ namespace Chloe.Oracle
 
             return string.Concat("\"", name, "\"");
         }
+
+        public override IDbmaintain Dbmaintain()
+        {
+            return new Dbmaintain(this);
+        }
     }
 }

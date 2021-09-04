@@ -824,6 +824,8 @@ namespace Chloe
             }
         }
 
+        public abstract IDbmaintain Dbmaintain();
+
         private class TrackEntityCollection
         {
             public TrackEntityCollection(TypeDescriptor typeDescriptor)
