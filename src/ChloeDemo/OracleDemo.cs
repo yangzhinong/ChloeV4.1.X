@@ -21,8 +21,28 @@ namespace ChloeDemo
             DbConfiguration.UseInterceptors(interceptor);
 
             var o = new OracleDbManagerTool(context);
-            o.DropTable<Insur_Country_Dict>();
-            o.InitTable<Insur_Country_Dict>();
+            //o.DropTable<Insur_Country_Dict>();
+            //o.InitTable<Insur_Country_Dict>();
+
+            {
+                //多关键字测试
+                //o.DropTable<Yzn.MutiKeyTest>();
+                //o.InitTable<Yzn.MutiKeyTest>();
+                o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
+
+                context.Insert(new Yzn.MutiKeyTest()
+                {
+                    Pat = "yzn",
+                    Visit = 1,
+                    Val = 99
+                });
+                //var pat = new Yzn.MutiKeyTest() { Pat = "yzn", Visit = 1, Val = 100 };
+                //context.Update<Yzn.MutiKeyTest>(pat);
+
+                context.Update<Yzn.MutiKeyTest>(
+                    x => x.Pat == "yzn" && x.Val == 99,
+                    x => new Yzn.MutiKeyTest() { Visit = 3 });
+            }
             Yzn.BoolTest.Run(context);
             BasicQuery();
             JoinQuery();
@@ -49,8 +69,9 @@ namespace ChloeDemo
         public static void BasicQuery()
         {
             IQuery<User> q = context.Query<User>();
-            var ccc = q.Select(a => Sql.NextValueForSequence<int>("USERS_AUTOID", null)).ToList();
+            var ccc = q.Select(a => Sql.NextValueForSequence<int>("USERS_AUTOID", null)).AsTracking().ToList();
             var x = q.Where(a => a.Id >= GetUser().Id).ToList();
+            context.TrackEntity(x);
 
             q.Where(a => a.Id == 1).FirstOrDefault();
             /*
