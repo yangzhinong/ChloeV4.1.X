@@ -4,7 +4,10 @@ using Chloe.Infrastructure;
 using Chloe.Reflection;
 using System;
 using System.Collections.Generic;
+using syscom = System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace ChloeDemo
@@ -27,6 +30,91 @@ namespace ChloeDemo
             {
                 this._db.Session.ExecuteNonQuery(sql);
             }
+        }
+
+        /// <summary>
+        /// 无表添加表，有表检查与模型的差异，添加表比模型少的列
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        public void SafteInitTablbeAndColumns<TEntity>()
+        {
+            Type entityType = typeof(TEntity);
+            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(entityType);
+
+            string tableName = typeDescriptor.Table.Name;
+            string schcmeName = typeDescriptor.Table.Schema;
+
+            if (_db.Query<SysDbModel.All_Tables>()
+                   .Any(x => x.Owner == schcmeName && x.Table_Name == tableName))
+            {
+                var oldColumns = _db.Query<SysDbModel.All_Tab_Cols>()
+                                    .Where(x => x.Owner == schcmeName &&
+                                               x.Table_Name == tableName)
+                                    .Select(x => x.Column_Name.ToUpper())
+                                    .ToList();
+                foreach (var propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
+                {
+                    var colName = propertyDescriptor.Column.Name.ToUpper();
+                    if (!oldColumns.Contains(colName))
+                    {
+                        var colpart = BuildColumnPart(propertyDescriptor);
+                        var schcmeTable = QuoteSchemaAndName(schcmeName, tableName);
+                        var sql = $"ALTER TABLE {schcmeTable} ADD ({colpart})";
+                        _db.Session.ExecuteNonQuery(sql);
+                        var prop = entityType.GetProperty(propertyDescriptor.Column.Name);
+                        var desc = GetPropertyComment(prop);
+                        if (!string.IsNullOrWhiteSpace(desc))
+                        {
+                            sql = $"COMMENT ON COLUMN {schcmeTable}.{colName} IS '{SafeSqlString(desc)}'";
+                            _db.Session.ExecuteNonQuery(sql);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                InitTable<TEntity>();
+            }
+        }
+
+        private string GetPropertyComment(PropertyInfo prop)
+        {
+            if (prop == null) return "";
+            if (Attribute.GetCustomAttribute(prop, typeof(DbColCommentAttribute))
+                                is DbColCommentAttribute atrrComment)
+            {
+                return atrrComment.Comment;
+            }
+            else
+            {
+                if (Attribute.GetCustomAttribute(prop, typeof(DisplayAttribute))
+                                is DisplayAttribute attrDisplay)
+                {
+                    if (string.IsNullOrWhiteSpace(attrDisplay.Description))
+                    {
+                        return attrDisplay.Description;
+                    }
+                    else
+                    {
+                        return attrDisplay.Name;
+                    }
+                }
+                if (Attribute.GetCustomAttribute(prop, typeof(syscom.DisplayNameAttribute))
+                                    is syscom.DisplayNameAttribute attrDisplayName)
+                {
+                    return attrDisplayName.DisplayName;
+                }
+            }
+            return "";
+        }
+
+        private string SafeSqlString(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return s;
+            }
+            return s.Replace("'", "''");
         }
 
         public void DropTable<TEntity>()
