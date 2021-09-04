@@ -1,5 +1,6 @@
 ﻿using Chloe;
 using Chloe.Infrastructure;
+using Chloe.Infrastructure.Interception;
 using Chloe.Oracle;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,9 @@ namespace ChloeDemo
 
         public static void Run()
         {
+            IDbCommandInterceptor interceptor = new DbCommandInterceptor();
+            DbConfiguration.UseInterceptors(interceptor);
+
             var o = new OracleDbManagerTool(context);
             o.DropTable<Insur_Country_Dict>();
             o.InitTable<Insur_Country_Dict>();
