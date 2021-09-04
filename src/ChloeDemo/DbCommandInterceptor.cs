@@ -33,8 +33,9 @@ namespace ChloeDemo
             this.BindByName(command);
 
             //interceptionContext.DataBag.Add("startTime", DateTime.Now);
+
             DebugSQLInfo(AppendDbCommandInfo(command));
-            DebugSQLInfo(command.CommandText);
+            //DebugSQLInfo(command.CommandText);
         }
 
         private void DebugSQLInfo(object info)
@@ -65,7 +66,7 @@ namespace ChloeDemo
             //DateTime startTime = (DateTime)(interceptionContext.DataBag["startTime"]);
             //Console.WriteLine(DateTime.Now.Subtract(startTime).TotalMilliseconds);
             if (interceptionContext.Exception == null)
-                DebugSQLInfo(interceptionContext.Result.FieldCount);
+                DebugSQLInfo("结果行数:" + interceptionContext.Result.FieldCount);
         }
 
         public void NonQueryExecuting(IDbCommand command, DbCommandInterceptionContext<int> interceptionContext)
@@ -73,13 +74,13 @@ namespace ChloeDemo
             this.BindByName(command);
 
             DebugSQLInfo(AppendDbCommandInfo(command));
-            DebugSQLInfo(command.CommandText);
+            //DebugSQLInfo(command.CommandText);
         }
 
         public void NonQueryExecuted(IDbCommand command, DbCommandInterceptionContext<int> interceptionContext)
         {
             if (interceptionContext.Exception == null)
-                DebugSQLInfo(interceptionContext.Result);
+                DebugSQLInfo("影响行数:" + interceptionContext.Result);
         }
 
         public void ScalarExecuting(IDbCommand command, DbCommandInterceptionContext<object> interceptionContext)
@@ -88,7 +89,7 @@ namespace ChloeDemo
 
             //interceptionContext.DataBag.Add("startTime", DateTime.Now);
             DebugSQLInfo(AppendDbCommandInfo(command));
-            DebugSQLInfo(command.CommandText);
+            //DebugSQLInfo(command.CommandText);
         }
 
         public void ScalarExecuted(IDbCommand command, DbCommandInterceptionContext<object> interceptionContext)
@@ -96,18 +97,18 @@ namespace ChloeDemo
             //DateTime startTime = (DateTime)(interceptionContext.DataBag["startTime"]);
             //Console.WriteLine(DateTime.Now.Subtract(startTime).TotalMilliseconds);
             if (interceptionContext.Exception == null)
-                DebugSQLInfo(interceptionContext.Result);
+                DebugSQLInfo("返回:" + interceptionContext.Result);
         }
 
         public static string AppendDbCommandInfo(IDbCommand command)
         {
             StringBuilder sb = new StringBuilder();
-
+            sb.AppendLine();
             foreach (IDbDataParameter param in command.Parameters)
             {
                 if (param == null)
                     continue;
-
+                sb.AppendLine();
                 object value = null;
                 if (param.Value == null || param.Value == DBNull.Value)
                 {
@@ -122,10 +123,9 @@ namespace ChloeDemo
                 }
 
                 sb.AppendFormat("{3} {0} {1} = {2};", Enum.GetName(typeof(DbType), param.DbType), param.ParameterName, value, Enum.GetName(typeof(ParameterDirection), param.Direction));
-                sb.AppendLine();
             }
 
-            sb.AppendLine(command.CommandText);
+            sb.Append(command.CommandText);
 
             return sb.ToString();
         }
