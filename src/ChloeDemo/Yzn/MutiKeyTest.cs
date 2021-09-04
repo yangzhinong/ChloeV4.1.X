@@ -20,7 +20,7 @@ namespace ChloeDemo.Yzn
         public int Val { get; set; }
 
         [Column(Precision = 10, Scale = 2)]
-        [DbColComment("添加小数列")]
+        [Comment("添加小数列")]
         public decimal AddDecCol { get; set; }
 
         /// <summary>

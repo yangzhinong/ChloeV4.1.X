@@ -1,4 +1,4 @@
-﻿namespace ChloeDemo.SysDbModel
+﻿namespace Chloe.Oracle.SysDbModel
 {
     public class All_Tab_Cols
     {

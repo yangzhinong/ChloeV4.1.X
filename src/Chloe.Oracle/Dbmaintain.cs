@@ -1,22 +1,22 @@
-﻿using Chloe;
+﻿using Chloe.Annotations;
 using Chloe.Descriptors;
 using Chloe.Infrastructure;
 using Chloe.Reflection;
 using System;
 using System.Collections.Generic;
-using syscom = System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using syscom = System.ComponentModel;
 
-namespace ChloeDemo
+namespace Chloe.Oracle
 {
-    public class OracleDbManagerTool
+    public class Dbmaintain
     {
         private IDbContext _db;
 
-        public OracleDbManagerTool(IDbContext db)
+        public Dbmaintain(IDbContext db)
         {
             _db = db;
         }
@@ -80,8 +80,8 @@ namespace ChloeDemo
         private string GetPropertyComment(PropertyInfo prop)
         {
             if (prop == null) return "";
-            if (Attribute.GetCustomAttribute(prop, typeof(DbColCommentAttribute))
-                                is DbColCommentAttribute atrrComment)
+            if (Attribute.GetCustomAttribute(prop, typeof(CommentAttribute))
+                                is CommentAttribute atrrComment)
             {
                 return atrrComment.Comment;
             }

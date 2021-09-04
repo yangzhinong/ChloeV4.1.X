@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ChloeDemo.SysDbModel
+namespace Chloe.Oracle.SysDbModel
 {
     public class All_Tables
     {

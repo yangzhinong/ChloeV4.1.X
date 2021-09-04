@@ -20,7 +20,7 @@ namespace ChloeDemo
             IDbCommandInterceptor interceptor = new DbCommandInterceptor();
             DbConfiguration.UseInterceptors(interceptor);
 
-            var o = new OracleDbManagerTool(context);
+            var o = new Dbmaintain(context);
             //o.DropTable<Insur_Country_Dict>();
             //o.InitTable<Insur_Country_Dict>();
 

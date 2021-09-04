@@ -39,4 +39,8 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+  </ItemGroup>
 </Project>

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ChloeDemo
+namespace Chloe.Annotations
 {
-    public class DbColCommentAttribute : Attribute
+    public class CommentAttribute : Attribute
     {
         public string Comment { get; }
 
-        public DbColCommentAttribute(string comment)
+        public CommentAttribute(string comment)
         {
             Comment = comment;
         }
