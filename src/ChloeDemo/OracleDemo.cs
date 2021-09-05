@@ -20,6 +20,7 @@ namespace ChloeDemo
             IDbCommandInterceptor interceptor = new DbCommandInterceptor();
             DbConfiguration.UseInterceptors(interceptor);
 
+            context.NonParamSQL = true; //生成无参的SQL
             var o = context.Dbmaintain();
             //o.DropTable<Insur_Country_Dict>();
             //o.InitTable<Insur_Country_Dict>();
@@ -37,12 +38,15 @@ namespace ChloeDemo
                 //    Val = 99
                 //});
 
-                var list = new List<Yzn.MutiKeyTest>()
-                {
-                    new Yzn.MutiKeyTest(){ Pat="yzn", Visit= 2, Val=33},
-                    new Yzn.MutiKeyTest(){ Pat="yq", Visit= 1, Val=33},
-                };
-                context.InsertRange(list);
+                //var list = new List<Yzn.MutiKeyTest>()
+                //{
+                //    new Yzn.MutiKeyTest(){ Pat="yzn's 2", Visit= 2, Val=33},
+                //    new Yzn.MutiKeyTest(){ Pat="yq", Visit= 1, Val=33},
+                //};
+                //context.InsertRange(list);
+                var u = new User() { Id = 2 };
+                context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
+                context.Update(new Yzn.MutiKeyTest() { Pat = "yzn", Visit = GetUser().Id, Val = 44 });
                 //var pat = new Yzn.MutiKeyTest() { Pat = "yzn", Visit = 1, Val = 100 };
                 //context.Update<Yzn.MutiKeyTest>(pat);
 

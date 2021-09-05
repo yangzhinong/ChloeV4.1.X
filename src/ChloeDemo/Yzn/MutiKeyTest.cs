@@ -9,12 +9,12 @@ namespace ChloeDemo.Yzn
     [Table("MUTIKEYTEST", "YZN")]
     public class MutiKeyTest
     {
-        [Column(IsPrimaryKey = true, Size = 20)]
+        [Column(IsPrimaryKey = true, Size = 20, DbType = System.Data.DbType.AnsiString)]
         [NonAutoIncrement]
         public string Pat { get; set; }
 
-        [Column(IsPrimaryKey = true)]
-        [NonAutoIncrement]
+        //[Column(IsPrimaryKey = true)]
+        //[NonAutoIncrement]
         public int Visit { get; set; }
 
         public int Val { get; set; }
