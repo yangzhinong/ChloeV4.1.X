@@ -523,11 +523,14 @@ namespace Chloe
                 MemberInfo key = kv.Key;
                 PrimitivePropertyDescriptor propertyDescriptor = typeDescriptor.GetPrimitivePropertyDescriptor(key);
 
-                if (propertyDescriptor.IsPrimaryKey)
-                    throw new ChloeException(string.Format("Could not update the primary key '{0}'.", propertyDescriptor.Column.Name));
-
+                //if (propertyDescriptor.IsPrimaryKey)
+                //{
+                //    continue;
+                //}
                 if (propertyDescriptor.IsAutoIncrement || propertyDescriptor.HasSequence())
-                    throw new ChloeException(string.Format("Could not update the column '{0}', because it's mapping member is auto increment or has define a sequence.", propertyDescriptor.Column.Name));
+                {
+                    continue;
+                }
 
                 e.UpdateColumns.Add(propertyDescriptor.Column, expressionParser.Parse(kv.Value));
             }
