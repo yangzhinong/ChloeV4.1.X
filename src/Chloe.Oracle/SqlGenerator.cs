@@ -13,22 +13,22 @@ namespace Chloe.Oracle
 {
     partial class SqlGenerator : SqlGeneratorBase
     {
-        static readonly object Boxed_1 = 1;
-        static readonly object Boxed_0 = 0;
+        private static readonly object Boxed_1 = 1;
+        private static readonly object Boxed_0 = 0;
 
-        DbParamCollection _parameters = new DbParamCollection();
+        private DbParamCollection _parameters = new DbParamCollection();
 
         public static readonly Dictionary<string, IMethodHandler> MethodHandlers = GetMethodHandlers();
-        static readonly Dictionary<string, Action<DbAggregateExpression, SqlGeneratorBase>> AggregateHandlers = InitAggregateHandlers();
-        static readonly Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGeneratorBase>> BinaryWithMethodHandlers = InitBinaryWithMethodHandlers();
-        static readonly Dictionary<Type, string> CastTypeMap;
+        private static readonly Dictionary<string, Action<DbAggregateExpression, SqlGeneratorBase>> AggregateHandlers = InitAggregateHandlers();
+        private static readonly Dictionary<MethodInfo, Action<DbBinaryExpression, SqlGeneratorBase>> BinaryWithMethodHandlers = InitBinaryWithMethodHandlers();
+        private static readonly Dictionary<Type, string> CastTypeMap;
         public static readonly Dictionary<Type, Type> NumericTypes;
-        static readonly List<string> CacheParameterNames;
+        private static readonly List<string> CacheParameterNames;
 
         static SqlGenerator()
         {
             Dictionary<Type, string> castTypeMap = new Dictionary<Type, string>();
-            //castTypeMap.Add(typeof(string), "NVARCHAR2"); // instead of using to_char(exp) 
+            //castTypeMap.Add(typeof(string), "NVARCHAR2"); // instead of using to_char(exp)
             castTypeMap.Add(typeof(byte), "NUMBER(3,0)");
             castTypeMap.Add(typeof(Int16), "NUMBER(4,0)");
             castTypeMap.Add(typeof(int), "NUMBER(9,0)");
@@ -37,10 +37,9 @@ namespace Chloe.Oracle
             castTypeMap.Add(typeof(double), "BINARY_DOUBLE");
             castTypeMap.Add(typeof(decimal), "NUMBER");
             castTypeMap.Add(typeof(bool), "NUMBER(9,0)");
-            //castTypeMap.Add(typeof(DateTime), "DATE"); // instead of using TO_TIMESTAMP(exp) 
+            //castTypeMap.Add(typeof(DateTime), "DATE"); // instead of using TO_TIMESTAMP(exp)
             //castTypeMap.Add(typeof(Guid), "BLOB");
             CastTypeMap = PublicHelper.Clone(castTypeMap);
-
 
             Dictionary<Type, Type> numericTypes = new Dictionary<Type, Type>();
             numericTypes.Add(typeof(byte), typeof(byte));
@@ -55,7 +54,6 @@ namespace Chloe.Oracle
             numericTypes.Add(typeof(double), typeof(double));
             numericTypes.Add(typeof(decimal), typeof(decimal));
             NumericTypes = PublicHelper.Clone(numericTypes);
-
 
             int cacheParameterNameCount = 2 * 12;
             List<string> cacheParameterNames = new List<string>(cacheParameterNameCount);
@@ -99,7 +97,6 @@ namespace Chloe.Oracle
                 return exp;
             }
 
-
             /*
              * a.Name == a.XName --> a.Name == a.XName or (a.Name is null and a.XName is null)
              */
@@ -120,6 +117,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbNotEqualExpression exp)
         {
             DbExpression left = exp.Left;
@@ -194,7 +192,6 @@ namespace Chloe.Oracle
                 return exp;
             }
 
-
             /*
              * a.Name != a.XName --> a.Name <> a.XName or (a.Name is null and a.XName is not null) or (a.Name is not null and a.XName is null)
              * ## a.Name != a.XName 不能翻译成：not (a.Name == a.XName or (a.Name is null and a.XName is null))，因为数据库里的 not 有时候并非真正意义上的“取反”！
@@ -250,6 +247,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbAndExpression exp)
         {
             Stack<DbExpression> operands = GatherBinaryExpressionOperand(exp);
@@ -257,10 +255,12 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbBitOrExpression exp)
         {
             throw new NotSupportedException("'|' operator is not supported.");
         }
+
         public override DbExpression Visit(DbOrExpression exp)
         {
             Stack<DbExpression> operands = GatherBinaryExpressionOperand(exp);
@@ -288,6 +288,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // -
         public override DbExpression Visit(DbSubtractExpression exp)
         {
@@ -296,6 +297,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // *
         public override DbExpression Visit(DbMultiplyExpression exp)
         {
@@ -304,6 +306,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // /
         public override DbExpression Visit(DbDivideExpression exp)
         {
@@ -312,6 +315,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // %
         public override DbExpression Visit(DbModuloExpression exp)
         {
@@ -323,6 +327,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbNegateExpression exp)
         {
             this.SqlBuilder.Append("(");
@@ -333,6 +338,7 @@ namespace Chloe.Oracle
             this.SqlBuilder.Append(")");
             return exp;
         }
+
         // <
         public override DbExpression Visit(DbLessThanExpression exp)
         {
@@ -342,6 +348,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // <=
         public override DbExpression Visit(DbLessThanOrEqualExpression exp)
         {
@@ -351,6 +358,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // >
         public override DbExpression Visit(DbGreaterThanExpression exp)
         {
@@ -360,6 +368,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         // >=
         public override DbExpression Visit(DbGreaterThanOrEqualExpression exp)
         {
@@ -369,7 +378,6 @@ namespace Chloe.Oracle
 
             return exp;
         }
-
 
         public override DbExpression Visit(DbAggregateExpression exp)
         {
@@ -383,12 +391,12 @@ namespace Chloe.Oracle
             return exp;
         }
 
-
         public override DbExpression Visit(DbTableExpression exp)
         {
             this.AppendTable(exp.Table);
             return exp;
         }
+
         public override DbExpression Visit(DbColumnAccessExpression exp)
         {
             this.QuoteName(exp.Table.Name);
@@ -397,6 +405,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbFromTableExpression exp)
         {
             this.AppendTableSegment(exp.Table);
@@ -404,6 +413,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbJoinTableExpression exp)
         {
             DbJoinTableExpression joinTablePart = exp;
@@ -437,7 +447,6 @@ namespace Chloe.Oracle
             return exp;
         }
 
-
         public override DbExpression Visit(DbSubQueryExpression exp)
         {
             this.SqlBuilder.Append("(");
@@ -446,6 +455,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbSqlQueryExpression exp)
         {
             if (exp.TakeCount != null)
@@ -486,6 +496,7 @@ namespace Chloe.Oracle
             this.BuildGeneralSql(exp);
             return exp;
         }
+
         public override DbExpression Visit(DbInsertExpression exp)
         {
             this.SqlBuilder.Append("INSERT INTO ");
@@ -554,6 +565,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbUpdateExpression exp)
         {
             this.SqlBuilder.Append("UPDATE ");
@@ -580,6 +592,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbDeleteExpression exp)
         {
             this.SqlBuilder.Append("DELETE FROM ");
@@ -622,7 +635,8 @@ namespace Chloe.Oracle
 
             return exp;
         }
-        // then 部分必须返回 C# type，所以得判断是否是诸如 a>1,a=b,in,like 等等的情况，如果是则将其构建成一个 case when 
+
+        // then 部分必须返回 C# type，所以得判断是否是诸如 a>1,a=b,in,like 等等的情况，如果是则将其构建成一个 case when
         public override DbExpression Visit(DbCaseWhenExpression exp)
         {
             this.LeftBracket();
@@ -630,7 +644,7 @@ namespace Chloe.Oracle
             this.SqlBuilder.Append("CASE");
             foreach (var whenThen in exp.WhenThenPairs)
             {
-                // then 部分得判断是否是诸如 a>1,a=b,in,like 等等的情况，如果是则将其构建成一个 case when 
+                // then 部分得判断是否是诸如 a>1,a=b,in,like 等等的情况，如果是则将其构建成一个 case when
                 this.SqlBuilder.Append(" WHEN ");
                 whenThen.When.Accept(this);
                 this.SqlBuilder.Append(" THEN ");
@@ -645,6 +659,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbConvertExpression exp)
         {
             DbExpression stripedExp = DbExpressionExtension.StripInvalidConvert(exp);
@@ -683,7 +698,6 @@ namespace Chloe.Oracle
 
             return exp;
         }
-
 
         public override DbExpression Visit(DbMethodCallExpression exp)
         {
@@ -733,6 +747,7 @@ namespace Chloe.Oracle
 
             throw UtilExceptions.NotSupportedMethod(exp.Method);
         }
+
         public override DbExpression Visit(DbMemberExpression exp)
         {
             MemberInfo member = exp.Member;
@@ -806,6 +821,7 @@ namespace Chloe.Oracle
 
             throw new NotSupportedException(string.Format("'{0}.{1}' is not supported.", member.DeclaringType.FullName, member.Name));
         }
+
         public override DbExpression Visit(DbConstantExpression exp)
         {
             if (exp.Value == null || exp.Value == DBNull.Value)
@@ -822,10 +838,11 @@ namespace Chloe.Oracle
             }
             else if (objType == PublicConstants.TypeOfString)
             {
-                if (string.Empty.Equals(exp.Value))
-                    this.SqlBuilder.Append("'", exp.Value, "'");
-                else
-                    this.SqlBuilder.Append("N'", exp.Value, "'");
+                this.SqlBuilder.Append(SafeSqlStr(exp.Value));
+                //if (string.Empty.Equals(exp.Value))
+
+                //else
+                //    this.SqlBuilder.Append("N'", exp.Value, "'");
                 return exp;
             }
             else if (objType.IsEnum)
@@ -844,6 +861,7 @@ namespace Chloe.Oracle
 
             return exp;
         }
+
         public override DbExpression Visit(DbParameterExpression exp)
         {
             object paramValue = exp.Value;
@@ -899,20 +917,21 @@ namespace Chloe.Oracle
             return exp;
         }
 
-
-        void AppendTableSegment(DbTableSegment seg)
+        private void AppendTableSegment(DbTableSegment seg)
         {
             seg.Body.Accept(this);
             this.SqlBuilder.Append(" ");
             this.QuoteName(seg.Alias);
         }
-        void AppendColumnSegment(DbColumnSegment seg)
+
+        private void AppendColumnSegment(DbColumnSegment seg)
         {
             DbValueExpressionTransformer.Transform(seg.Body).Accept(this);
             this.SqlBuilder.Append(" AS ");
             this.QuoteName(seg.Alias);
         }
-        void AppendOrdering(DbOrdering ordering)
+
+        private void AppendOrdering(DbOrdering ordering)
         {
             if (ordering.OrderType == DbOrderType.Asc)
             {
@@ -930,14 +949,15 @@ namespace Chloe.Oracle
             throw new NotSupportedException("OrderType: " + ordering.OrderType);
         }
 
-        void VisitDbJoinTableExpressions(List<DbJoinTableExpression> tables)
+        private void VisitDbJoinTableExpressions(List<DbJoinTableExpression> tables)
         {
             foreach (var table in tables)
             {
                 table.Accept(this);
             }
         }
-        void BuildGeneralSql(DbSqlQueryExpression exp)
+
+        private void BuildGeneralSql(DbSqlQueryExpression exp)
         {
             if (exp.TakeCount != null || exp.SkipCount != null)
                 throw new ArgumentException();
@@ -976,8 +996,7 @@ namespace Chloe.Oracle
                 throw new NotSupportedException($"lock type: {seg.Lock.ToString()}");
         }
 
-
-        void BuildWhereState(DbExpression whereExpression)
+        private void BuildWhereState(DbExpression whereExpression)
         {
             if (whereExpression != null)
             {
@@ -985,7 +1004,8 @@ namespace Chloe.Oracle
                 whereExpression.Accept(this);
             }
         }
-        void BuildOrderState(List<DbOrdering> orderings)
+
+        private void BuildOrderState(List<DbOrdering> orderings)
         {
             if (orderings.Count > 0)
             {
@@ -993,7 +1013,8 @@ namespace Chloe.Oracle
                 this.ConcatOrderings(orderings);
             }
         }
-        void ConcatOrderings(List<DbOrdering> orderings)
+
+        private void ConcatOrderings(List<DbOrdering> orderings)
         {
             for (int i = 0; i < orderings.Count; i++)
             {
@@ -1005,7 +1026,8 @@ namespace Chloe.Oracle
                 this.AppendOrdering(orderings[i]);
             }
         }
-        void BuildGroupState(DbSqlQueryExpression exp)
+
+        private void BuildGroupState(DbSqlQueryExpression exp)
         {
             var groupSegments = exp.GroupSegments;
             if (groupSegments.Count == 0)
@@ -1031,6 +1053,7 @@ namespace Chloe.Oracle
         {
             return name;
         }
+
         public virtual void QuoteName(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -1038,7 +1061,8 @@ namespace Chloe.Oracle
 
             this.SqlBuilder.Append("\"", this.SqlName(name), "\"");
         }
-        void AppendTable(DbTable table)
+
+        private void AppendTable(DbTable table)
         {
             if (!string.IsNullOrEmpty(table.Schema))
             {
@@ -1049,7 +1073,7 @@ namespace Chloe.Oracle
             this.QuoteName(table.Name);
         }
 
-        void ConcatOperands(IEnumerable<DbExpression> operands, string connector)
+        private void ConcatOperands(IEnumerable<DbExpression> operands, string connector)
         {
             this.SqlBuilder.Append("(");
 
@@ -1067,15 +1091,15 @@ namespace Chloe.Oracle
             this.SqlBuilder.Append(")");
             return;
         }
-        void BuildCastState(DbExpression castExp, string targetDbTypeString)
+
+        private void BuildCastState(DbExpression castExp, string targetDbTypeString)
         {
             this.SqlBuilder.Append("CAST(");
             castExp.Accept(this);
             this.SqlBuilder.Append(" AS ", targetDbTypeString, ")");
         }
 
-
-        bool IsDatePart(DbMemberExpression exp)
+        private bool IsDatePart(DbMemberExpression exp)
         {
             MemberInfo member = exp.Member;
 
@@ -1135,7 +1159,8 @@ namespace Chloe.Oracle
 
             return false;
         }
-        bool IsDateSubtract(DbMemberExpression exp)
+
+        private bool IsDateSubtract(DbMemberExpression exp)
         {
             MemberInfo member = exp.Member;
 
@@ -1176,7 +1201,7 @@ namespace Chloe.Oracle
 
                         return false;
 
-appendIntervalTime:
+                    appendIntervalTime:
                         this.CalcDateDiffPrecise(dbMethodExp.Object, dbMethodExp.Arguments[0], intervalDivisor.Value);
                         return true;
                     }
@@ -1198,7 +1223,7 @@ appendIntervalTime:
             return false;
         }
 
-        void CalcDateDiffPrecise(DbExpression dateTime1, DbExpression dateTime2, int divisor)
+        private void CalcDateDiffPrecise(DbExpression dateTime1, DbExpression dateTime2, int divisor)
         {
             if (divisor == 1)
             {
@@ -1212,15 +1237,16 @@ appendIntervalTime:
             this.SqlBuilder.Append(divisor.ToString());
             this.RightBracket();
         }
-        void CalcDateDiffMillisecond(DbExpression dateTime1, DbExpression dateTime2)
+
+        private void CalcDateDiffMillisecond(DbExpression dateTime1, DbExpression dateTime2)
         {
             /*
              * 计算两个日期相差的毫秒数：
-             * (cast(dateTime1 as date)-cast(dateTime2 as date)) * 24 * 60 * 60 * 1000 
+             * (cast(dateTime1 as date)-cast(dateTime2 as date)) * 24 * 60 * 60 * 1000
              * +
              * cast(to_char(cast(dateTime1 as timestamp),'ff3') as number)
              * -
-             * cast(to_char(cast(dateTime2 as timestamp),'ff3') as number) 
+             * cast(to_char(cast(dateTime2 as timestamp),'ff3') as number)
              */
 
             this.LeftBracket();
@@ -1231,11 +1257,12 @@ appendIntervalTime:
             this.ExtractMillisecondPart(dateTime2);
             this.RightBracket();
         }
-        void CalcDateDiffMillisecondSketchy(DbExpression dateTime1, DbExpression dateTime2)
+
+        private void CalcDateDiffMillisecondSketchy(DbExpression dateTime1, DbExpression dateTime2)
         {
             /*
              * 计算去掉毫秒部分后两个日期相差的毫秒数：
-             * (cast(dateTime1 as date)-cast(dateTime2 as date)) * 24 * 60 * 60 * 1000 
+             * (cast(dateTime1 as date)-cast(dateTime2 as date)) * 24 * 60 * 60 * 1000
              */
             this.LeftBracket();
             this.BuildCastState(dateTime1, "DATE");
@@ -1246,10 +1273,11 @@ appendIntervalTime:
             this.SqlBuilder.Append(" * ");
             this.SqlBuilder.Append((24 * 60 * 60 * 1000).ToString());
         }
-        void ExtractMillisecondPart(DbExpression dateTime)
+
+        private void ExtractMillisecondPart(DbExpression dateTime)
         {
             /* 提取一个日期的毫秒部分：
-             * cast(to_char(cast(dateTime as timestamp),'ff3') as number) 
+             * cast(to_char(cast(dateTime as timestamp),'ff3') as number)
              */
             this.SqlBuilder.Append("CAST(");
 
@@ -1258,6 +1286,17 @@ appendIntervalTime:
             this.SqlBuilder.Append(",'ff3')");
 
             this.SqlBuilder.Append(" AS NUMBER)");
+        }
+
+        private string SafeSqlStr(object str)
+        {
+            if (str == null) return "''";
+            var s = str.ToString();
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return $"'{ s}'";
+            }
+            return $"'{ s.Replace("'", "''")}'";
         }
     }
 }
