@@ -175,5 +175,7 @@ namespace Chloe
         void TrackEntity(object entity);
 
         IDbmaintain Dbmaintain();
+
+        bool NonParamSQL { get; set; }
     }
 }

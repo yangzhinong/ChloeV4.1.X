@@ -886,10 +886,35 @@ namespace Chloe.Oracle
                     exp.DbType = DbType.Int32;
                 }
             }
-
             if (paramValue == null)
                 paramValue = DBNull.Value;
-
+            if (NonParamSQL)
+            {
+                if (paramValue == DBNull.Value)
+                {
+                    this.SqlBuilder.Append("null");
+                    return exp;
+                }
+                else if (paramType == PublicConstants.TypeOfBoolean)
+                {
+                    this.SqlBuilder.Append(paramValue);
+                }
+                else if (Utils.IsToStringableNumericType(paramType))
+                {
+                    this.SqlBuilder.Append(paramValue);
+                    return exp;
+                }
+                else if (paramType.IsEnum)
+                {
+                    this.SqlBuilder.Append((int)paramValue);
+                    return exp;
+                }
+                else if (paramType == PublicConstants.TypeOfString)
+                {
+                    this.SqlBuilder.Append(SafeSqlStr(paramValue));
+                    return exp;
+                }
+            }
             DbParam p = this._parameters.Find(paramValue, paramType, exp.DbType);
 
             if (p != null)

@@ -8,7 +8,7 @@ namespace Chloe.Oracle
 {
     internal static class Utils
     {
-        static readonly HashSet<Type> ToStringableNumericTypes;
+        private static readonly HashSet<Type> ToStringableNumericTypes;
 
         static Utils()
         {
@@ -21,6 +21,9 @@ namespace Chloe.Oracle
             ToStringableNumericTypes.Add(typeof(uint));
             ToStringableNumericTypes.Add(typeof(long));
             ToStringableNumericTypes.Add(typeof(ulong));
+            ToStringableNumericTypes.Add(typeof(decimal));
+            ToStringableNumericTypes.Add(typeof(float));
+            ToStringableNumericTypes.Add(typeof(double));
             ToStringableNumericTypes.TrimExcess();
         }
 

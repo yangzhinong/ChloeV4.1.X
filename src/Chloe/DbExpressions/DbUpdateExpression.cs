@@ -4,12 +4,19 @@ namespace Chloe.DbExpressions
 {
     public class DbUpdateExpression : DbExpression
     {
-        DbTable _table;
-        DbExpression _condition;
+        private DbTable _table;
+        private DbExpression _condition;
+
         public DbUpdateExpression(DbTable table)
             : this(table, null)
         {
         }
+
+        /// <summary>
+        /// 生成更新表表达式
+        /// </summary>
+        /// <param name="table">表</param>
+        /// <param name="condition">Where条件</param>
         public DbUpdateExpression(DbTable table, DbExpression condition)
             : base(DbExpressionType.Update, PublicConstants.TypeOfVoid)
         {

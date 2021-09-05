@@ -159,7 +159,7 @@ namespace Chloe
             return (long)val + 1;
         }
 
-        public static DbExpression MakeCondition(PairList<PrimitivePropertyDescriptor, object> propertyValuePairs, DbTable dbTable)
+        public static DbExpression MakeCondition(PairList<PrimitivePropertyDescriptor, object> propertyValuePairs, DbTable dbTable, IDbContext dbContext)
         {
             DbExpression conditionExp = null;
             foreach (var pair in propertyValuePairs)
@@ -167,8 +167,28 @@ namespace Chloe
                 PrimitivePropertyDescriptor propertyDescriptor = pair.Item1;
                 object val = pair.Item2;
 
+                DbExpression right = null;
                 DbExpression left = new DbColumnAccessExpression(dbTable, propertyDescriptor.Column);
-                DbExpression right = DbExpression.Parameter(val, propertyDescriptor.PropertyType, propertyDescriptor.Column.DbType);
+                if (dbContext.NonParamSQL)
+                {
+                    if (Utils.IsToStringableNumericType(propertyDescriptor.PropertyType))
+                    {
+                        right = DbExpression.Constant(val, propertyDescriptor.PropertyType);
+                    }
+                    else if (Utils.IsTypeStr(propertyDescriptor.PropertyType))
+                    {
+                        right = DbExpression.Constant(val, PublicConstants.TypeOfString);
+                    }
+                    else
+                    {
+                        right = DbExpression.Parameter(val, propertyDescriptor.PropertyType, propertyDescriptor.Column.DbType);
+                    }
+                }
+                else
+                {
+                    right = DbExpression.Parameter(val, propertyDescriptor.PropertyType, propertyDescriptor.Column.DbType);
+                }
+
                 DbExpression equalExp = new DbEqualExpression(left, right);
                 conditionExp = conditionExp.And(equalExp);
             }

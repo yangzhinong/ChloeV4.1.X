@@ -384,7 +384,7 @@ namespace Chloe.Oracle
                 return 0;
 
             DbTable dbTable = PublicHelper.CreateDbTable(typeDescriptor, table);
-            DbExpression conditionExp = PublicHelper.MakeCondition(keyValues, dbTable);
+            DbExpression conditionExp = PublicHelper.MakeCondition(keyValues, dbTable, this);
             DbUpdateExpression e = new DbUpdateExpression(dbTable, conditionExp);
 
             foreach (var item in updateColumns)
@@ -402,6 +402,42 @@ namespace Chloe.Oracle
 
             if (entityState != null)
                 entityState.Refresh();
+
+            return rowsAffected;
+        }
+
+        public override int Delete<TEntity>(TEntity entity, string table)
+        {
+            PublicHelper.CheckNull(entity);
+
+            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TEntity));
+            PublicHelper.EnsureHasPrimaryKey(typeDescriptor);
+
+            PairList<PrimitivePropertyDescriptor, object> keyValues = new PairList<PrimitivePropertyDescriptor, object>(typeDescriptor.PrimaryKeys.Count);
+
+            foreach (PrimitivePropertyDescriptor keyPropertyDescriptor in typeDescriptor.PrimaryKeys)
+            {
+                object keyValue = keyPropertyDescriptor.GetValue(entity);
+                PrimaryKeyHelper.KeyValueNotNull(keyPropertyDescriptor, keyValue);
+                keyValues.Add(keyPropertyDescriptor, keyValue);
+            }
+
+            if (typeDescriptor.HasRowVersion())
+            {
+                var rowVersionValue = typeDescriptor.RowVersion.GetValue(entity);
+                keyValues.Add(typeDescriptor.RowVersion, rowVersionValue);
+            }
+
+            DbTable dbTable = PublicHelper.CreateDbTable(typeDescriptor, table);
+            DbExpression conditionExp = PublicHelper.MakeCondition(keyValues, dbTable, this);
+            DbDeleteExpression e = new DbDeleteExpression(dbTable, conditionExp);
+
+            int rowsAffected = this.ExecuteNonQuery(e);
+
+            if (typeDescriptor.HasRowVersion())
+            {
+                PublicHelper.CauseErrorIfOptimisticUpdateFailed(rowsAffected);
+            }
 
             return rowsAffected;
         }

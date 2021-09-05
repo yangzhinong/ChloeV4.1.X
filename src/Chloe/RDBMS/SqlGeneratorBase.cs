@@ -7,11 +7,11 @@ namespace Chloe.RDBMS
 {
     public class SqlGeneratorBase : DbExpressionVisitor<DbExpression>
     {
-        ISqlBuilder _sqlBuilder = new SqlBuilder();
+        private ISqlBuilder _sqlBuilder = new SqlBuilder();
+        public bool NonParamSQL { get; set; }
 
         protected SqlGeneratorBase()
         {
-
         }
 
         public ISqlBuilder SqlBuilder { get { return this._sqlBuilder; } }

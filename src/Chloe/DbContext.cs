@@ -27,6 +27,7 @@ namespace Chloe
         private DbSession _session;
 
         private Dictionary<Type, TrackEntityCollection> _trackingEntityContainer;
+        private bool _nonParamSQL;
 
         private Dictionary<Type, TrackEntityCollection> TrackingEntityContainer
         {
@@ -492,76 +493,7 @@ namespace Chloe
             return this.Update(entity, null);
         }
 
-        public virtual int Update<TEntity>(TEntity entity, string table)
-        {
-            PublicHelper.CheckNull(entity);
-
-            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TEntity));
-            PublicHelper.EnsureHasPrimaryKey(typeDescriptor);
-
-            PairList<PrimitivePropertyDescriptor, object> keyValues = new PairList<PrimitivePropertyDescriptor, object>(typeDescriptor.PrimaryKeys.Count);
-
-            IEntityState entityState = this.TryGetTrackedEntityState(entity);
-            Dictionary<PrimitivePropertyDescriptor, DbExpression> updateColumns = new Dictionary<PrimitivePropertyDescriptor, DbExpression>();
-
-            foreach (PrimitivePropertyDescriptor propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
-            {
-                if (propertyDescriptor.IsPrimaryKey)
-                {
-                    var keyValue = propertyDescriptor.GetValue(entity);
-                    PrimaryKeyHelper.KeyValueNotNull(propertyDescriptor, keyValue);
-                    keyValues.Add(propertyDescriptor, keyValue);
-                    continue;
-                }
-
-                if (propertyDescriptor.CannotUpdate())
-                    continue;
-
-                object val = propertyDescriptor.GetValue(entity);
-                PublicHelper.NotNullCheck(propertyDescriptor, val);
-
-                if (entityState != null && !entityState.HasChanged(propertyDescriptor, val))
-                    continue;
-
-                DbExpression valExp = DbExpression.Parameter(val, propertyDescriptor.PropertyType, propertyDescriptor.Column.DbType);
-                updateColumns.Add(propertyDescriptor, valExp);
-            }
-
-            object rowVersionNewValue = null;
-            if (typeDescriptor.HasRowVersion())
-            {
-                var rowVersionDescriptor = typeDescriptor.RowVersion;
-                var rowVersionOldValue = rowVersionDescriptor.GetValue(entity);
-                rowVersionNewValue = PublicHelper.IncreaseRowVersionNumber(rowVersionOldValue);
-                updateColumns.Add(rowVersionDescriptor, DbExpression.Parameter(rowVersionNewValue, rowVersionDescriptor.PropertyType, rowVersionDescriptor.Column.DbType));
-                keyValues.Add(rowVersionDescriptor, rowVersionOldValue);
-            }
-
-            if (updateColumns.Count == 0)
-                return 0;
-
-            DbTable dbTable = PublicHelper.CreateDbTable(typeDescriptor, table);
-            DbExpression conditionExp = PublicHelper.MakeCondition(keyValues, dbTable);
-            DbUpdateExpression e = new DbUpdateExpression(dbTable, conditionExp);
-
-            foreach (var item in updateColumns)
-            {
-                e.UpdateColumns.Add(item.Key.Column, item.Value);
-            }
-
-            int rowsAffected = this.ExecuteNonQuery(e);
-
-            if (typeDescriptor.HasRowVersion())
-            {
-                PublicHelper.CauseErrorIfOptimisticUpdateFailed(rowsAffected);
-                typeDescriptor.RowVersion.SetValue(entity, rowVersionNewValue);
-            }
-
-            if (entityState != null)
-                entityState.Refresh();
-
-            return rowsAffected;
-        }
+        public abstract int Update<TEntity>(TEntity entity, string table);
 
         public virtual int Update<TEntity>(Expression<Func<TEntity, bool>> condition, Expression<Func<TEntity, TEntity>> content)
         {
@@ -611,41 +543,7 @@ namespace Chloe
             return this.Delete(entity, null);
         }
 
-        public virtual int Delete<TEntity>(TEntity entity, string table)
-        {
-            PublicHelper.CheckNull(entity);
-
-            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TEntity));
-            PublicHelper.EnsureHasPrimaryKey(typeDescriptor);
-
-            PairList<PrimitivePropertyDescriptor, object> keyValues = new PairList<PrimitivePropertyDescriptor, object>(typeDescriptor.PrimaryKeys.Count);
-
-            foreach (PrimitivePropertyDescriptor keyPropertyDescriptor in typeDescriptor.PrimaryKeys)
-            {
-                object keyValue = keyPropertyDescriptor.GetValue(entity);
-                PrimaryKeyHelper.KeyValueNotNull(keyPropertyDescriptor, keyValue);
-                keyValues.Add(keyPropertyDescriptor, keyValue);
-            }
-
-            if (typeDescriptor.HasRowVersion())
-            {
-                var rowVersionValue = typeDescriptor.RowVersion.GetValue(entity);
-                keyValues.Add(typeDescriptor.RowVersion, rowVersionValue);
-            }
-
-            DbTable dbTable = PublicHelper.CreateDbTable(typeDescriptor, table);
-            DbExpression conditionExp = PublicHelper.MakeCondition(keyValues, dbTable);
-            DbDeleteExpression e = new DbDeleteExpression(dbTable, conditionExp);
-
-            int rowsAffected = this.ExecuteNonQuery(e);
-
-            if (typeDescriptor.HasRowVersion())
-            {
-                PublicHelper.CauseErrorIfOptimisticUpdateFailed(rowsAffected);
-            }
-
-            return rowsAffected;
-        }
+        public abstract int Delete<TEntity>(TEntity entity, string table);
 
         public virtual int Delete<TEntity>(Expression<Func<TEntity, bool>> condition)
         {
@@ -825,6 +723,17 @@ namespace Chloe
         }
 
         public abstract IDbmaintain Dbmaintain();
+
+        public bool NonParamSQL
+        {
+            get => _nonParamSQL;
+
+            set
+            {
+                _nonParamSQL = value;
+                this.DatabaseProvider.CreateDbExpressionTranslator().NonParamSQL = value;
+            }
+        }
 
         private class TrackEntityCollection
         {

@@ -6,5 +6,7 @@ namespace Chloe.Infrastructure
     public interface IDbExpressionTranslator
     {
         string Translate(DbExpression expression, out List<DbParam> parameters);
+
+        bool NonParamSQL { get; set; }
     }
 }
