@@ -27,7 +27,6 @@ namespace Chloe
         private DbSession _session;
 
         private Dictionary<Type, TrackEntityCollection> _trackingEntityContainer;
-        private bool _nonParamSQL;
 
         private Dictionary<Type, TrackEntityCollection> TrackingEntityContainer
         {
@@ -722,19 +721,6 @@ namespace Chloe
             if (this._disposed)
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
-            }
-        }
-
-        public abstract IDbmaintain Dbmaintain();
-
-        public bool NonParamSQL
-        {
-            get => _nonParamSQL;
-
-            set
-            {
-                _nonParamSQL = value;
-                this.DatabaseProvider.CreateDbExpressionTranslator().NonParamSQL = value;
             }
         }
 

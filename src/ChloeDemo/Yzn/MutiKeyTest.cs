@@ -28,5 +28,8 @@ namespace ChloeDemo.Yzn
         /// </summary>
         [Column(Size = 40, DbType = System.Data.DbType.AnsiString)]
         public string Desc { get; set; }
+
+        [Column(IsRowVersion = true)]
+        public int RowVersion { get; set; }
     }
 }

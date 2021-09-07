@@ -45,8 +45,31 @@ namespace ChloeDemo
                 //};
                 //context.InsertRange(list);
                 var u = new User() { Id = 2 };
-                context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
-                context.Update(new Yzn.MutiKeyTest() { Pat = "yzn", Visit = GetUser().Id, Val = 44 });
+                //context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
+                //context.Update(new Yzn.MutiKeyTest() { Pat = "yzn", Visit = GetUser().Id, Val = 44 });
+
+                var sql = $@"begin
+UPDATE YZN.MUTIKEYTEST
+   SET PAT = '22',
+       VISIT = 2,
+       VAL = 44,
+       ADDDECCOL = 0,
+       ROWVERSION= ROWVERSION + 1
+ WHERE PAT = '22' AND ROWVERSION = 1;
+UPDATE YZN.MUTIKEYTEST
+   SET PAT = '22',
+       VISIT = 2,
+       VAL = 44,
+       ADDDECCOL = 0,
+       ROWVERSION= ROWVERSION + 1
+ WHERE PAT = 'ee' AND ROWVERSION = 1;
+end;";
+                context.Session.ExecuteNonQuery(sql);
+                context.UpdateRange(new List<Yzn.MutiKeyTest>()
+                {
+                    new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 , RowVersion=1},
+                    new Yzn.MutiKeyTest() { Pat = "yq", Visit=1, Val=3, Desc="Heloo", RowVersion=3}
+                });
                 //var pat = new Yzn.MutiKeyTest() { Pat = "yzn", Visit = 1, Val = 100 };
                 //context.Update<Yzn.MutiKeyTest>(pat);
 

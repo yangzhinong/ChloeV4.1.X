@@ -9,7 +9,7 @@ namespace Chloe
     /// <summary>
     /// 注：DbContext 对象非线程安全，多线程不能共享一个 DbContext 对象。
     /// </summary>
-    public interface IDbContext : IDisposable
+    public partial interface IDbContext : IDisposable
     {
         IDbSession Session { get; }
 
@@ -173,9 +173,5 @@ namespace Chloe
         void UseTransaction(Action action, IsolationLevel il);
 
         void TrackEntity(object entity);
-
-        IDbmaintain Dbmaintain();
-
-        bool NonParamSQL { get; set; }
     }
 }
