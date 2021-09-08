@@ -173,5 +173,7 @@ namespace Chloe
         void UseTransaction(Action action, IsolationLevel il);
 
         void TrackEntity(object entity);
+
+        int UpdateRange<TEntity, TUpdate>(List<TUpdate> entities, string table = null);
     }
 }

@@ -10,19 +10,33 @@ namespace Chloe.Oracle
 {
     public partial class OracleContext : DbContext
     {
-        public override int UpdateRange<TEntity>(List<TEntity> entities, string table = null)
+        public override int UpdateRange<TEntity, TUpdate>(List<TUpdate> entities, string table = null)
         {
             PublicHelper.CheckNull(entities);
+
             if (entities.Count == 0)
                 return 0;
+            var propertyNames = EntityTypeContainer.GetDescriptor(typeof(TUpdate)).PrimitivePropertyDescriptors
+                               .Select(x => x.Property.Name).ToList();
 
+            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TEntity));
+            List<PrimitivePropertyDescriptor> setPropertyDescriptors = typeDescriptor.PrimitivePropertyDescriptors
+                                              .Where(a => a.IsRowVersion ||
+                                                    (a.IsPrimaryKey == false &&
+                                                        a.IsAutoIncrement == false &&
+                                                        propertyNames.Contains(a.Property.Name)
+                                                     ))
+                                              .ToList();
+
+            if (!typeDescriptor.PrimitivePropertyDescriptors
+                        .Where(a => a.IsPrimaryKey)
+                        .All(x => propertyNames.Contains(x.Property.Name)))
+            {
+                throw new Exception("更新的数据中必须包含完整的主键信息!");
+            }
             int maxParameters = 2100;
             int batchSize = 50; /* 每批实体大小，此值通过测试得出相对插入速度比较快的一个值 */
 
-            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TEntity));
-
-            List<PrimitivePropertyDescriptor> setPropertyDescriptors = typeDescriptor.PrimitivePropertyDescriptors
-                                                        .Where(a => a.IsAutoIncrement == false).ToList();
             var whereProperties = typeDescriptor.PrimitivePropertyDescriptors.Where(p => p.IsPrimaryKey || p.IsRowVersion).ToList();
             int maxDbParamsCount = maxParameters - setPropertyDescriptors.Count; /* 控制一个 sql 的参数个数 */
 
@@ -107,9 +121,11 @@ namespace Chloe.Oracle
                     {
                         //sqlBuilder.Insert(0, sqlTemplate);
 
-                        sqlBuilder.Insert(0, "begin ");
-                        sqlBuilder.Append("; end;");
-
+                        if (batchCount > 1)
+                        {
+                            sqlBuilder.Insert(0, "begin ");
+                            sqlBuilder.Append("; end;");
+                        }
                         string sql = sqlBuilder.ToString();
                         this.Session.ExecuteNonQuery(sql, dbParams.ToArray());
 

@@ -22,6 +22,11 @@ namespace Chloe
             }
         }
 
-        public abstract int UpdateRange<TEntity>(List<TEntity> entities, string table = null);
+        public abstract int UpdateRange<TEntity, TUpdate>(List<TUpdate> entities, string table = null);
+
+        public virtual int UpdateRange<TEntity>(List<TEntity> entities, string table = null)
+        {
+            return UpdateRange<TEntity, TEntity>(entities, table);
+        }
     }
 }
