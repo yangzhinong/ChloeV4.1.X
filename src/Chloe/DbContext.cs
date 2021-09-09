@@ -494,12 +494,29 @@ namespace Chloe
 
         public abstract int Update<TEntity>(TEntity entity, string table);
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="condition"></param>
+        /// <param name="content"></param>
+        /// <returns></returns>
         public virtual int Update<TEntity>(Expression<Func<TEntity, bool>> condition, Expression<Func<TEntity, TEntity>> content)
         {
             return this.Update(condition, content, null);
         }
 
-        public virtual int Update<TEntity>(Expression<Func<TEntity, bool>> condition, Expression<Func<TEntity, TEntity>> content, string table)
+        /// <summary>
+        /// 指定条件更新（除了自动增长和序列列不会更新外其余都要更新）不会跟踪值变化， 不会处理行版本
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="condition"></param>
+        /// <param name="content"></param>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        public virtual int Update<TEntity>(Expression<Func<TEntity, bool>> condition,
+                                           Expression<Func<TEntity, TEntity>> content,
+                                           string table)
         {
             PublicHelper.CheckNull(condition);
             PublicHelper.CheckNull(content);

@@ -124,8 +124,23 @@ namespace Chloe
 
         void InsertRange<TEntity>(List<TEntity> entities, string table);
 
+        /// <summary>
+        /// 更新实体， 主键和列定义了不更新的字段不会更新， 行版本会自动加1，主键会生成Where之句，行版本也会在Where子句中
+        /// 并且如果有变化跟踪，就只会更新变化的列
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         int Update<TEntity>(TEntity entity);
 
+        /// <summary>
+        /// 更新实体， 主键和列定义了不更新的字段不会更新， 行版本会自动加1，主键会生成Where之句，行版本也会在Where子句中
+        /// 并且如果有变化跟踪，就只会更新变化的列
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="entity">更新实体</param>
+        /// <param name="table">指定表</param>
+        /// <returns></returns>
         int Update<TEntity>(TEntity entity, string table);
 
         /// <summary>
@@ -173,7 +188,5 @@ namespace Chloe
         void UseTransaction(Action action, IsolationLevel il);
 
         void TrackEntity(object entity);
-
-        int UpdateRange<TEntity, TUpdate>(List<TUpdate> entities, string table = null);
     }
 }

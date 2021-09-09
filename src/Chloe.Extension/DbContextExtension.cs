@@ -18,6 +18,7 @@ namespace Chloe
         }
 
         /// <summary>
+        /// 只更新实体中表达式指的字段（不考虑Version字段)
         ///  dbContext.Update&lt;User&gt;(user, a =&gt; a.Id == 1)
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>

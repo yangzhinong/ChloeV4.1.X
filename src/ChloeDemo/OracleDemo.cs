@@ -13,15 +13,15 @@ namespace ChloeDemo
     public class OracleDemo
     {
         /* WARNING: DbContext 是非线程安全的，正式使用不能设置为 static，并且用完务必要调用 Dispose 方法销毁对象 */
-        private static OracleContext context = new OracleContext(new OracleConnectionFactory("Data Source=localhost/gaoxiong;User ID=yzn;Password=openlock;"));
+        private static IDbContext db = new OracleContext(new OracleConnectionFactory("Data Source=localhost/gaoxiong;User ID=yzn;Password=openlock;"));
 
         public static void Run()
         {
             IDbCommandInterceptor interceptor = new DbCommandInterceptor();
             DbConfiguration.UseInterceptors(interceptor);
 
-            context.NonParamSQL = true; //生成无参的SQL
-            var o = context.Dbmaintain();
+            db.NonParamSQL = true; //生成无参的SQL
+            var o = db.Dbmaintain();
             //o.DropTable<Insur_Country_Dict>();
             //o.InitTable<Insur_Country_Dict>();
 
@@ -48,36 +48,19 @@ namespace ChloeDemo
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "yzn", Visit = GetUser().Id, Val = 44 });
 
-                var sql = $@"begin
-UPDATE YZN.MUTIKEYTEST
-   SET PAT = '22',
-       VISIT = 2,
-       VAL = 44,
-       ADDDECCOL = 0,
-       ROWVERSION= ROWVERSION + 1
- WHERE PAT = '22' AND ROWVERSION = 1;
-UPDATE YZN.MUTIKEYTEST
-   SET PAT = '22',
-       VISIT = 2,
-       VAL = 44,
-       ADDDECCOL = 0,
-       ROWVERSION= ROWVERSION + 1
- WHERE PAT = 'ee' AND ROWVERSION = 1;
-end;";
-                context.Session.ExecuteNonQuery(sql);
-                context.UpdateRange(new List<Yzn.MutiKeyTest>()
-                {
-                    new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 , RowVersion=1},
-                    new Yzn.MutiKeyTest() { Pat = "yq", Visit=1, Val=3, Desc="Heloo", RowVersion=3}
-                });
+                //db.UpdateRange(new List<Yzn.MutiKeyTest>()
+                //{
+                //    new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 , RowVersion=1},
+                //    new Yzn.MutiKeyTest() { Pat = "yq", Visit=1, Val=3, Desc="Heloo", RowVersion=3}
+                //});
                 //var pat = new Yzn.MutiKeyTest() { Pat = "yzn", Visit = 1, Val = 100 };
                 //context.Update<Yzn.MutiKeyTest>(pat);
-
-                context.Update<Yzn.MutiKeyTest>(
+                db.UpdateOneUseRangeMethod(new { Pat = "yy", Visit = u.Id, k = 2 }, (Yzn.MutiKeyTest x) => true);
+                db.Update<Yzn.MutiKeyTest>(
                     x => x.Pat == "yzn" && x.Val == 99,
                     x => new Yzn.MutiKeyTest() { Visit = 3 });
             }
-            Yzn.BoolTest.Run(context);
+            Yzn.BoolTest.Run(db);
             BasicQuery();
             JoinQuery();
             AggregateQuery();
@@ -102,10 +85,10 @@ end;";
 
         public static void BasicQuery()
         {
-            IQuery<User> q = context.Query<User>();
+            IQuery<User> q = db.Query<User>();
             var ccc = q.Select(a => Sql.NextValueForSequence<int>("USERS_AUTOID", null)).AsTracking().ToList();
             var x = q.Where(a => a.Id >= GetUser().Id).ToList();
-            context.TrackEntity(x);
+            db.TrackEntity(x);
 
             q.Where(a => a.Id == 1).FirstOrDefault();
             /*
@@ -145,7 +128,7 @@ end;";
              */
 
             /* in 子查询 */
-            users = q.Where(a => context.Query<City>().Select(c => c.Id).ToList().Contains((int)a.CityId)).ToList(); /* IQuery<T>.ToList().Contains() 方法组合就会生成 in 子查询 sql 语句 */
+            users = q.Where(a => db.Query<City>().Select(c => c.Id).ToList().Contains((int)a.CityId)).ToList(); /* IQuery<T>.ToList().Contains() 方法组合就会生成 in 子查询 sql 语句 */
             /*
              * SELECT
              *      "USERS"."GENDER" AS "GENDER","USERS"."AGE" AS "AGE","USERS"."CITYID" AS "CITYID","USERS"."OPTIME" AS "OPTIME","USERS"."ID" AS "ID","USERS"."NAME" AS "NAME"
@@ -164,7 +147,7 @@ end;";
 
         public static void JoinQuery()
         {
-            var user_city_province = context.Query<User>()
+            var user_city_province = db.Query<User>()
                                      .InnerJoin<City>((user, city) => user.CityId == city.Id)
                                      .InnerJoin<Province>((user, city, province) => city.ProvinceId == province.Id);
 
@@ -181,7 +164,7 @@ end;";
              */
 
             /* quick join and paging. */
-            context.JoinQuery<User, City>((user, city) => new object[]
+            db.JoinQuery<User, City>((user, city) => new object[]
             {
                 JoinType.LeftJoin, user.CityId == city.Id
             })
@@ -191,7 +174,7 @@ end;";
             .TakePage(1, 20)
             .ToList();
 
-            context.JoinQuery<User, City, Province>((user, city, province) => new object[]
+            db.JoinQuery<User, City, Province>((user, city, province) => new object[]
             {
                 JoinType.LeftJoin, user.CityId == city.Id,          /* 表 User 和 City 进行Left连接 */
                 JoinType.LeftJoin, city.ProvinceId == province.Id   /* 表 City 和 Province 进行Left连接 */
@@ -207,7 +190,7 @@ end;";
 
         public static void AggregateQuery()
         {
-            IQuery<User> q = context.Query<User>();
+            IQuery<User> q = db.Query<User>();
 
             q.Select(a => Sql.Count()).First();
             /*
@@ -254,7 +237,7 @@ end;";
 
         public static void GroupQuery()
         {
-            IQuery<User> q = context.Query<User>();
+            IQuery<User> q = db.Query<User>();
 
             IGroupingQuery<User> g = q.Where(a => a.Id > 0).GroupBy(a => a.Age);
 
@@ -285,8 +268,8 @@ end;";
              *      --统计查询
              */
 
-            IQuery<User> userQuery = context.Query<User>();
-            IQuery<City> cityQuery = context.Query<City>();
+            IQuery<User> userQuery = db.Query<User>();
+            IQuery<City> cityQuery = db.Query<City>();
 
             List<User> users = null;
 
@@ -354,19 +337,19 @@ end;";
         public static void QueryWithNavigation()
         {
             /* context filter */
-            context.HasQueryFilter<User>(a => a.Id > -100);
-            context.HasQueryFilter<City>(a => a.Id > -200);
-            context.HasQueryFilter<Province>(a => a.Id > -300);
+            db.HasQueryFilter<User>(a => a.Id > -100);
+            db.HasQueryFilter<City>(a => a.Id > -200);
+            db.HasQueryFilter<Province>(a => a.Id > -300);
 
             object result = null;
-            result = context.Query<User>().Include(a => a.City).ThenInclude(a => a.Province).ToList();
-            result = context.Query<User>().IgnoreAllFilters().Include(a => a.City).ThenInclude(a => a.Province).ToList();
-            result = context.Query<City>().Include(a => a.Province).IncludeMany(a => a.Users).AndWhere(a => a.Age >= 18).ToList();
-            result = context.Query<Province>().IncludeMany(a => a.Cities).ThenIncludeMany(a => a.Users).ToList();
+            result = db.Query<User>().Include(a => a.City).ThenInclude(a => a.Province).ToList();
+            result = db.Query<User>().IgnoreAllFilters().Include(a => a.City).ThenInclude(a => a.Province).ToList();
+            result = db.Query<City>().Include(a => a.Province).IncludeMany(a => a.Users).AndWhere(a => a.Age >= 18).ToList();
+            result = db.Query<Province>().IncludeMany(a => a.Cities).ThenIncludeMany(a => a.Users).ToList();
 
-            result = context.Query<Province>().IncludeMany(a => a.Cities).ThenIncludeMany(a => a.Users).Where(a => a.Id > 0).TakePage(1, 20).ToList();
+            result = db.Query<Province>().IncludeMany(a => a.Cities).ThenIncludeMany(a => a.Users).Where(a => a.Id > 0).TakePage(1, 20).ToList();
 
-            result = context.Query<City>().IncludeMany(a => a.Users).AndWhere(a => a.Age > 18).ToList();
+            result = db.Query<City>().IncludeMany(a => a.Users).AndWhere(a => a.Age > 18).ToList();
 
             ConsoleHelper.WriteLineAndReadKey();
         }
@@ -374,7 +357,7 @@ end;";
         public static void Insert()
         {
             /* User 实体打了序列标签，会自动获取序列值。返回主键 Id */
-            int id = (int)context.Insert<User>(() => new User() { Name = "lu", Age = 18, Gender = Gender.Man, CityId = 1, OpTime = DateTime.Now });
+            int id = (int)db.Insert<User>(() => new User() { Name = "lu", Age = 18, Gender = Gender.Man, CityId = 1, OpTime = DateTime.Now });
             /*
              * SELECT "USERS_AUTOID"."NEXTVAL" FROM "DUAL"
              * Int32 :P_0 = 14;
@@ -389,7 +372,7 @@ end;";
             user.OpTime = DateTime.Now;
 
             //会自动将自增 Id 设置到 user 的 Id 属性上
-            user = context.Insert(user);
+            user = db.Insert(user);
             /*
              * SELECT "USERS_AUTOID"."NEXTVAL" FROM "DUAL"
              * Int32 :P_0 = 15;
@@ -405,14 +388,14 @@ end;";
 
         public static void Update()
         {
-            context.Update<User>(a => a.Id == 1, a => new User() { Name = a.Name, Age = a.Age + 1, Gender = Gender.Man, OpTime = DateTime.Now });
+            db.Update<User>(a => a.Id == 1, a => new User() { Name = a.Name, Age = a.Age + 1, Gender = Gender.Man, OpTime = DateTime.Now });
             /*
              * UPDATE "USERS" SET "NAME"="USERS"."NAME","AGE"=("USERS"."AGE" + 1),"GENDER"=1,"OPTIME"=SYSTIMESTAMP WHERE "USERS"."ID" = 1
              */
 
             //批量更新
             //给所有女性年轻 1 岁
-            context.Update<User>(a => a.Gender == Gender.Woman, a => new User() { Age = a.Age - 1, OpTime = DateTime.Now });
+            db.Update<User>(a => a.Gender == Gender.Woman, a => new User() { Age = a.Age - 1, OpTime = DateTime.Now });
             /*
              * UPDATE "USERS" SET "AGE"=("USERS"."AGE" - 1),"OPTIME"=SYSTIMESTAMP WHERE "USERS"."GENDER" = 2
              */
@@ -424,7 +407,7 @@ end;";
             user.Gender = Gender.Man;
             user.OpTime = DateTime.Now;
 
-            context.Update(user); //会更新所有映射的字段
+            db.Update(user); //会更新所有映射的字段
             /*
              * String :P_0 = 'lu';
                Int32 :P_1 = 1;
@@ -438,9 +421,9 @@ end;";
              * 支持只更新属性值已变的属性
              */
 
-            context.TrackEntity(user);//在上下文中跟踪实体
+            db.TrackEntity(user);//在上下文中跟踪实体
             user.Name = user.Name + "1";
-            context.Update(user);//这时只会更新被修改的字段
+            db.Update(user);//这时只会更新被修改的字段
             /*
              * String :P_0 = 'lu1';
                Int32 :P_1 = 1;
@@ -452,21 +435,21 @@ end;";
 
         public static void Delete()
         {
-            context.Delete<User>(a => a.Id == 1);
+            db.Delete<User>(a => a.Id == 1);
             /*
              * DELETE FROM "USERS" WHERE "USERS"."ID" = 1
              */
 
             //批量删除
             //删除所有不男不女的用户
-            context.Delete<User>(a => a.Gender == null);
+            db.Delete<User>(a => a.Gender == null);
             /*
              * DELETE FROM "USERS" WHERE "USERS"."GENDER" IS NULL
              */
 
             User user = new User();
             user.Id = 1;
-            context.Delete(user);
+            db.Delete(user);
             /*
              * Int32 :P_0 = 1;
                DELETE FROM "USERS" WHERE "USERS"."ID" = :P_0
@@ -477,7 +460,7 @@ end;";
 
         public static void Method()
         {
-            IQuery<User> q = context.Query<User>();
+            IQuery<User> q = db.Query<User>();
 
             var space = new char[] { ' ' };
 
@@ -562,9 +545,9 @@ end;";
 
         public static void ExecuteCommandText()
         {
-            List<User> users = context.SqlQuery<User>("select * from Users where Age > :age", DbParam.Create(":age", 12)).ToList();
+            List<User> users = db.SqlQuery<User>("select * from Users where Age > :age", DbParam.Create(":age", 12)).ToList();
 
-            int rowsAffected = context.Session.ExecuteNonQuery("update Users set name=:name where Id = 1", DbParam.Create(":name", "Chloe"));
+            int rowsAffected = db.Session.ExecuteNonQuery("update Users set name=:name where Id = 1", DbParam.Create(":name", "Chloe"));
 
             /*
              * 执行存储过程:
@@ -577,10 +560,10 @@ end;";
 
         public static void DoWithTransactionEx()
         {
-            context.UseTransaction(() =>
+            db.UseTransaction(() =>
             {
-                context.Update<User>(a => a.Id == 1, a => new User() { Name = a.Name, Age = a.Age + 1, Gender = Gender.Man, OpTime = DateTime.Now });
-                context.Delete<User>(a => a.Id == 1024);
+                db.Update<User>(a => a.Id == 1, a => new User() { Name = a.Name, Age = a.Age + 1, Gender = Gender.Man, OpTime = DateTime.Now });
+                db.Delete<User>(a => a.Id == 1024);
             });
 
             ConsoleHelper.WriteLineAndReadKey();
@@ -588,11 +571,11 @@ end;";
 
         public static void DoWithTransaction()
         {
-            using (ITransientTransaction tran = context.BeginTransaction())
+            using (ITransientTransaction tran = db.BeginTransaction())
             {
                 /* do some things here */
-                context.Update<User>(a => a.Id == 1, a => new User() { Name = a.Name, Age = a.Age + 1, Gender = Gender.Man, OpTime = DateTime.Now });
-                context.Delete<User>(a => a.Id == 1024);
+                db.Update<User>(a => a.Id == 1, a => new User() { Name = a.Name, Age = a.Age + 1, Gender = Gender.Man, OpTime = DateTime.Now });
+                db.Delete<User>(a => a.Id == 1024);
 
                 tran.Commit();
             }

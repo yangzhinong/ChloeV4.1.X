@@ -24,7 +24,6 @@ namespace Chloe.Descriptors
 
         public DbColumn Column { get { return this.Definition.Column; } }
 
-
         public bool HasSequence()
         {
             return !string.IsNullOrEmpty(this.Definition.SequenceName);
