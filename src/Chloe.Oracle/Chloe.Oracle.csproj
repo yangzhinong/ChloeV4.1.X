@@ -42,5 +42,6 @@
 
   <ItemGroup>
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data.DataSetExtensions" />
   </ItemGroup>
 </Project>
