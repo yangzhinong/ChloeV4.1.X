@@ -12,7 +12,7 @@ using syscom = System.ComponentModel;
 
 namespace Chloe.Oracle
 {
-    public class Dbmaintain :IDbmaintain
+    public class Dbmaintain : IDbmaintain
     {
         private IDbContext _db;
 
@@ -25,6 +25,22 @@ namespace Chloe.Oracle
         {
             Type entityType = typeof(TEntity);
             var sqlList = this.CreateTableScript(entityType);
+
+            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(entityType);
+            string tableName = typeDescriptor.Table.Name;
+            string schcmeName = typeDescriptor.Table.Schema;
+            foreach (var propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
+            {
+                var colName = propertyDescriptor.Column.Name.ToUpper();
+                var schcmeTable = QuoteSchemaAndName(schcmeName, tableName);
+                var prop = entityType.GetProperty(propertyDescriptor.Column.Name);
+                var desc = GetPropertyComment(prop);
+                if (!string.IsNullOrWhiteSpace(desc))
+                {
+                    var sql = $"COMMENT ON COLUMN {schcmeTable}.{colName} IS '{SafeSqlString(desc)}'";
+                    sqlList.Add(sql);
+                }
+            }
 
             foreach (var sql in sqlList)
             {
@@ -137,11 +153,12 @@ namespace Chloe.Oracle
             TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(entityType);
             string tableName = typeDescriptor.Table.Name;
             string schcmeName = typeDescriptor.Table.Schema;
+            string schcmeTableName = this.QuoteSchemaAndName(schcmeName, tableName);
             bool tableExists = this._db.SqlQuery<int>($"select count(1) from user_tables where TABLE_NAME = '{tableName.ToUpper()}'").First() > 0;
             if (!tableExists)
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append($"CREATE TABLE {this.QuoteSchemaAndName(schcmeName, tableName)}(");
+                sb.Append($"CREATE TABLE {schcmeTableName}(");
 
                 string c = "";
                 foreach (var propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
@@ -161,10 +178,10 @@ namespace Chloe.Oracle
                     var keys = typeDescriptor.PrimaryKeys.Select(x => x.Column.Name).ToList();
                     foreach (string key in keys)
                     {
-                        sqlList.Add($"ALTER TABLE {this.QuoteName(tableName)} ADD CHECK ({this.QuoteName(key)} IS NOT NULL)");
+                        sqlList.Add($"ALTER TABLE {schcmeTableName} ADD CHECK ({this.QuoteName(key)} IS NOT NULL)");
                     }
                     var keyQuoteJion = string.Join(",", keys.Select(x => QuoteName(x)));
-                    sqlList.Add($"ALTER TABLE {this.QuoteName(tableName)} ADD PRIMARY KEY ({keyQuoteJion})");
+                    sqlList.Add($"ALTER TABLE {schcmeTableName} ADD PRIMARY KEY ({keyQuoteJion})");
                 }
             }
 
