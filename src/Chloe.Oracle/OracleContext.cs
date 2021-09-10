@@ -121,13 +121,13 @@ namespace Chloe.Oracle
 
             TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TEntity));
 
-            if (typeDescriptor.PrimaryKeys.Count > 1)
-            {
-                /* 对于多主键的实体，暂时不支持调用这个方法进行插入 */
-                throw new NotSupportedException(string.Format("Can not call this method because entity '{0}' has multiple keys.", typeDescriptor.Definition.Type.FullName));
-            }
+            //if (typeDescriptor.PrimaryKeys.Count > 1)
+            //{
+            //    /* 对于多主键的实体，暂时不支持调用这个方法进行插入 */
+            //    throw new NotSupportedException(string.Format("Can not call this method because entity '{0}' has multiple keys.", typeDescriptor.Definition.Type.FullName));
+            //}
 
-            PrimitivePropertyDescriptor keyPropertyDescriptor = typeDescriptor.PrimaryKeys.FirstOrDefault();
+            var keyPropertyDescriptors = typeDescriptor.PrimaryKeys;
 
             Dictionary<MemberInfo, Expression> insertColumns = InitMemberExtractor.Extract(content);
 
@@ -135,8 +135,7 @@ namespace Chloe.Oracle
 
             DefaultExpressionParser expressionParser = typeDescriptor.GetExpressionParser(dbTable);
             DbInsertExpression insertExp = new DbInsertExpression(dbTable);
-
-            object keyVal = null;
+            var keysDic = new Dictionary<PrimitivePropertyDescriptor, object>();
 
             foreach (var kv in insertColumns)
             {
@@ -156,8 +155,8 @@ namespace Chloe.Oracle
                         throw new ChloeException(string.Format("The primary key '{0}' could not be null.", propertyDescriptor.Property.Name));
                     else
                     {
-                        keyVal = val;
-                        insertExp.InsertColumns.Add(propertyDescriptor.Column, DbExpression.Parameter(keyVal, propertyDescriptor.PropertyType, propertyDescriptor.Column.DbType));
+                        keysDic.Add(propertyDescriptor, val);
+                        insertExp.InsertColumns.Add(propertyDescriptor.Column, DbExpression.Parameter(val, propertyDescriptor.PropertyType, propertyDescriptor.Column.DbType));
                         continue;
                     }
                 }
@@ -165,6 +164,7 @@ namespace Chloe.Oracle
                 insertExp.InsertColumns.Add(propertyDescriptor.Column, expressionParser.Parse(kv.Value));
             }
 
+            //只增加主键是自增列或序列的返回
             foreach (PrimitivePropertyDescriptor propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
             {
                 if (propertyDescriptor.IsAutoIncrement && propertyDescriptor.IsPrimaryKey)
@@ -187,26 +187,39 @@ namespace Chloe.Oracle
                 }
             }
 
-            if (keyPropertyDescriptor != null)
+            var keyValProperyNames = keysDic.Keys.Select(x => x.Property.Name).ToList();
+            foreach (var keyPropertyDescriptor in keyPropertyDescriptors)
             {
                 //主键为空并且主键又不是自增列
-                if (keyVal == null && !keyPropertyDescriptor.IsAutoIncrement && !keyPropertyDescriptor.HasSequence())
+                if (!keyValProperyNames.Exists(x => keyPropertyDescriptor.Property.Name == x))
                 {
-                    throw new ChloeException(string.Format("The primary key '{0}' could not be null.", keyPropertyDescriptor.Property.Name));
+                    if (!keyPropertyDescriptor.IsAutoIncrement && !keyPropertyDescriptor.HasSequence())
+                    {
+                        throw new ChloeException(string.Format("The primary key '{0}' could not be null.", keyPropertyDescriptor.Property.Name));
+                    }
                 }
             }
 
             List<DbParam> parameters;
             this.ExecuteNonQuery(insertExp, out parameters);
-
-            if (keyPropertyDescriptor != null && (keyPropertyDescriptor.IsAutoIncrement || keyPropertyDescriptor.HasSequence()))
+            List<object> retList = new List<object>();
+            if (keyPropertyDescriptors.Count > 0)
             {
-                string outputColumnName = Utils.GenOutputColumnParameterName(keyPropertyDescriptor.Column.Name);
-                DbParam outputParam = parameters.Where(a => a.Direction == ParamDirection.Output && a.Name == outputColumnName).First();
-                keyVal = PublicHelper.ConvertObjectType(outputParam.Value, keyPropertyDescriptor.PropertyType);
+                foreach (var keyPropertyDescriptor in keyPropertyDescriptors)
+                {
+                    if (keyPropertyDescriptor != null && (keyPropertyDescriptor.IsAutoIncrement || keyPropertyDescriptor.HasSequence()))
+                    {
+                        string outputColumnName = Utils.GenOutputColumnParameterName(keyPropertyDescriptor.Column.Name);
+                        DbParam outputParam = parameters.Where(a => a.Direction == ParamDirection.Output && a.Name == outputColumnName).First();
+                        retList.Add(PublicHelper.ConvertObjectType(outputParam.Value, keyPropertyDescriptor.PropertyType));
+                    }
+                }
             }
-
-            return keyVal; /* It will return null if an entity does not define primary key. */
+            if (retList.Count > 0)
+            {
+                return retList[0];
+            }
+            return null;
         }
 
         public override void InsertRange<TEntity>(List<TEntity> entities, string table)

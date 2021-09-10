@@ -115,7 +115,7 @@ namespace Chloe
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="content"></param>
-        /// <returns>It will return null if an entity does not define primary key,other wise return primary key value.</returns>
+        /// <returns>如果有定义自增或序列主键，则返回主键值， 否则返回空</returns>
         object Insert<TEntity>(Expression<Func<TEntity>> content);
 
         object Insert<TEntity>(Expression<Func<TEntity>> content, string table);

@@ -43,19 +43,29 @@ namespace ChloeDemo
                 //    new Yzn.MutiKeyTest(){ Pat="yzn's 2", Visit= 2, Val=33},
                 //    new Yzn.MutiKeyTest(){ Pat="yq", Visit= 1, Val=33},
                 //};
-                //context.InsertRange(list);
+                db.Insert<Yzn.MutiKeyTest>(() => new Yzn.MutiKeyTest()
+                {
+                    Pat = "yzn",
+                    Visit = 1,
+                    Val = 3
+                });
+
+                db.Update<Yzn.MutiKeyTest>(x => x.Pat == "yzn" && x.Val > 2, x => new Yzn.MutiKeyTest()
+                {
+                    Desc = "Hello"
+                });
                 var u = new User() { Id = 2 };
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "yzn", Visit = GetUser().Id, Val = 44 });
 
-                //db.UpdateRange(new List<Yzn.MutiKeyTest>()
-                //{
-                //    new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 , RowVersion=1},
-                //    new Yzn.MutiKeyTest() { Pat = "yq", Visit=1, Val=3, Desc="Heloo", RowVersion=3}
-                //});
+                db.UpdateRange(new List<Yzn.MutiKeyTest>()
+                {
+                    new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 , RowVersion=1},
+                    new Yzn.MutiKeyTest() { Pat = "yq", Visit=1, Val=3, Desc="Heloo", RowVersion=3}
+                });
                 //var pat = new Yzn.MutiKeyTest() { Pat = "yzn", Visit = 1, Val = 100 };
                 //context.Update<Yzn.MutiKeyTest>(pat);
-                db.UpdateOneUseRangeMethod(new { Pat = "yy", Visit = u.Id, k = 2 }, (Yzn.MutiKeyTest x) => true);
+                db.UpdateOneUseRangeMethod(new { Pat = "yzn", Visit = 1, k = 2 }, (Yzn.MutiKeyTest x) => true);
                 db.Update<Yzn.MutiKeyTest>(
                     x => x.Pat == "yzn" && x.Val == 99,
                     x => new Yzn.MutiKeyTest() { Visit = 3 });

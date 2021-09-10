@@ -13,8 +13,8 @@ namespace ChloeDemo.Yzn
         [NonAutoIncrement]
         public string Pat { get; set; }
 
-        //[Column(IsPrimaryKey = true)]
-        //[NonAutoIncrement]
+        [Column(IsPrimaryKey = true)]
+        [NonAutoIncrement]
         public int Visit { get; set; }
 
         public int Val { get; set; }
