@@ -27,10 +27,11 @@ namespace ChloeDemo
 
             {
                 //多关键字测试
-                o.DropTable<Yzn.MutiKeyTest>();
-                //o.InitTable<Yzn.MutiKeyTest>();
-                o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
+                //o.DropTable<Yzn.MutiKeyTest>();
+                ////o.InitTable<Yzn.MutiKeyTest>();
+                //o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
 
+                //var q = db.Query<Yzn.MutiKeyTest>().Select(x => Sql.Count()).ToList();
                 //context.Insert(new Yzn.MutiKeyTest()
                 //{
                 //    Pat = "yzn",
@@ -43,16 +44,22 @@ namespace ChloeDemo
                 //    new Yzn.MutiKeyTest(){ Pat="yzn's 2", Visit= 2, Val=33},
                 //    new Yzn.MutiKeyTest(){ Pat="yq", Visit= 1, Val=33},
                 //};
-                db.Insert<Yzn.MutiKeyTest>(() => new Yzn.MutiKeyTest()
-                {
-                    Pat = "yzn",
-                    Visit = 1,
-                    Val = 3
-                });
+                //db.Insert<Yzn.MutiKeyTest>(() => new Yzn.MutiKeyTest()
+                //{
+                //    Pat = "yzn",
+                //    Visit = 1,
+                //    Val = 3
+                //});
 
                 db.Update<Yzn.MutiKeyTest>(x => x.Pat == "yzn" && x.Val > 2, x => new Yzn.MutiKeyTest()
                 {
                     Desc = "Hello"
+                });
+
+                db.Update<Yzn.MutiKeyTest>(x => x.Pat == "yzn" && x.Val > 2, x => new Yzn.MutiKeyTest()
+                {
+                    Desc = "Yes",
+                    RowVersion = 3,
                 });
                 var u = new User() { Id = 2 };
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
@@ -476,6 +483,10 @@ namespace ChloeDemo
 
             DateTime startTime = DateTime.Now;
             DateTime endTime = startTime.AddDays(1);
+            var dd = q.Select(a => new
+            {
+                AddDays = startTime.AddDays(1)
+            }).ToList();
             var ret = q.Select(a => new
             {
                 Id = a.Id,

@@ -5,6 +5,7 @@ using Chloe.DbExpressions;
 using Chloe.Descriptors;
 using Chloe.Exceptions;
 using Chloe.Infrastructure;
+using Chloe.InternalExtensions;
 using Chloe.Query;
 using Chloe.Query.Internals;
 using Chloe.Reflection;
@@ -531,6 +532,21 @@ namespace Chloe
             DefaultExpressionParser expressionParser = typeDescriptor.GetExpressionParser(explicitDbTable);
 
             DbExpression conditionExp = expressionParser.ParseFilterPredicate(condition);
+            object rowVersionNewValue = null;
+            if (updateColumns.Any(x => typeDescriptor.GetPrimitivePropertyDescriptor(x.Key).IsRowVersion))
+            {
+                var kvRowVersion = updateColumns.Where(x => typeDescriptor.GetPrimitivePropertyDescriptor(x.Key).IsRowVersion).First();
+                var rowVersionDescriptor = typeDescriptor.RowVersion;
+                var delfunc = content.Compile();
+
+                var obj = delfunc(default(TEntity));
+                var rowVersionOldValue = typeof(TEntity).GetProperty(rowVersionDescriptor.Property.Name).GetValue(obj, null); //todo
+                rowVersionNewValue = PublicHelper.IncreaseRowVersionNumber(rowVersionOldValue);
+                DbExpression right = DbExpression.Constant(rowVersionOldValue, rowVersionDescriptor.PropertyType);
+                DbExpression left = new DbColumnAccessExpression(explicitDbTable, rowVersionDescriptor.Column);
+                DbExpression equalExp = new DbEqualExpression(left, right);
+                conditionExp = conditionExp.And(equalExp);
+            }
 
             DbUpdateExpression e = new DbUpdateExpression(explicitDbTable ?? typeDescriptor.Table, conditionExp);
 
@@ -547,8 +563,29 @@ namespace Chloe
                 {
                     continue;
                 }
+                if (propertyDescriptor.IsRowVersion)
+                {
+                    var rowVersionDescriptor = typeDescriptor.RowVersion;
+                    e.UpdateColumns.Add(propertyDescriptor.Column,
+                        DbExpression.Parameter(rowVersionNewValue,
+                                    rowVersionDescriptor.PropertyType, rowVersionDescriptor.Column.DbType));
+                }
+                else
+                {
+                    e.UpdateColumns.Add(propertyDescriptor.Column, expressionParser.Parse(kv.Value));
+                }
+            }
 
-                e.UpdateColumns.Add(propertyDescriptor.Column, expressionParser.Parse(kv.Value));
+            if (typeDescriptor.HasRowVersion() && rowVersionNewValue == null)
+            {
+                var rowVersionDescriptor = typeDescriptor.RowVersion;
+                e.UpdateColumns.Add(rowVersionDescriptor.Column,
+                    new DbMethodCallExpression(null,
+                        PublicConstants.MethodInfo_Sql_NextRowVersion,
+                        new List<DbExpression>()
+                        {
+                            new DbColumnAccessExpression(explicitDbTable , rowVersionDescriptor.Column)
+                        }));
             }
 
             if (e.UpdateColumns.Count == 0)
