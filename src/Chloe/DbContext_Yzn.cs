@@ -41,5 +41,10 @@ namespace Chloe
             List<TUpdate> updates = new List<TUpdate> { entitie };
             return UpdateRange(updates, typeHelper, checkWhere);
         }
+
+        public virtual int InsertFrom<TInsert, TCols, TSelect>(Expression<Func<TInsert, TCols>> insertInto, IQuery<TSelect> select)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

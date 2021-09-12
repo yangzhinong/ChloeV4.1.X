@@ -59,5 +59,14 @@ namespace Chloe
         int UpdateOneUseRangeMethod<TEntity, TUpdate>(TUpdate entitie, bool checkWhere = true);
 
         bool NonParamSQL { get; set; }
+
+        /// <summary>
+        /// 生成这种insert into a (f1,f2,f2) select c1,c2,c3 from b where b.score>70
+        /// </summary>
+        /// <typeparam name="TInsert"></typeparam>
+        /// <param name="insertCols"></param>
+        /// <param name="select"></param>
+        /// <returns></returns>
+        int InsertFrom<TInsert, TCols, TSelect>(Expression<Func<TInsert, TCols>> insertCols, IQuery<TSelect> select);
     }
 }

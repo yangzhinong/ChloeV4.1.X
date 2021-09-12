@@ -27,9 +27,9 @@ namespace ChloeDemo
 
             {
                 //多关键字测试
-                //o.DropTable<Yzn.MutiKeyTest>();
-                ////o.InitTable<Yzn.MutiKeyTest>();
-                //o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
+                o.DropTable<Yzn.MutiKeyTest>();
+                //o.InitTable<Yzn.MutiKeyTest>();
+                o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
 
                 //var q = db.Query<Yzn.MutiKeyTest>().Select(x => Sql.Count()).ToList();
                 //context.Insert(new Yzn.MutiKeyTest()
@@ -50,6 +50,15 @@ namespace ChloeDemo
                 //    Visit = 1,
                 //    Val = 3
                 //});
+                var u = new User() { Id = 2, Name = "yzn" };
+                var dNow = DateTime.Now.AddDays(-3);
+                //var sqlSelect = db.Query<Yzn.MutiKeyTest>().Where(x => x.Pat == u.Name && x.CreateTime < dNow)
+                //                  .Select(x => new { key = x.Pat, NewId = 1 }).ToString();
+
+                db.InsertFrom((Yzn.MutiKeyTest x) => new { x.Pat, x.Visit, x.Desc },
+                     db.Query<Yzn.MutiKeyTest>()
+                       .Where(x => x.CreateTime > dNow)
+                       .Select(x => new { x.Pat, x.Visit, x.Desc }));
 
                 db.Update<Yzn.MutiKeyTest>(x => x.Pat == "yzn" && x.Val > 2, x => new Yzn.MutiKeyTest()
                 {
@@ -61,7 +70,7 @@ namespace ChloeDemo
                     Desc = "Yes",
                     RowVersion = 3,
                 });
-                var u = new User() { Id = 2 };
+
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "y'zn", Visit = u.Id, Val = 44 });
                 //context.Update(new Yzn.MutiKeyTest() { Pat = "yzn", Visit = GetUser().Id, Val = 44 });
 

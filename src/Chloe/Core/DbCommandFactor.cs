@@ -2,7 +2,7 @@
 
 namespace Chloe.Core
 {
-    class DbCommandFactor
+    public class DbCommandFactor
     {
         public DbCommandFactor(IObjectActivator objectActivator, string commandText, DbParam[] parameters)
         {
@@ -10,6 +10,7 @@ namespace Chloe.Core
             this.CommandText = commandText;
             this.Parameters = parameters;
         }
+
         public IObjectActivator ObjectActivator { get; set; }
         public string CommandText { get; set; }
         public DbParam[] Parameters { get; set; }

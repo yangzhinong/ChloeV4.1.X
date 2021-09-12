@@ -1,4 +1,5 @@
-﻿using Chloe.DbExpressions;
+﻿using Chloe.Core.Visitors;
+using Chloe.DbExpressions;
 using Chloe.Descriptors;
 using Chloe.Infrastructure;
 using System;
@@ -12,6 +13,17 @@ namespace Chloe.Oracle
 {
     public partial class OracleContext : DbContext
     {
+        /// <summary>
+        /// 批量更新（只要表实体定义正确，程序将自动处理行版本）
+        /// Set子句中 会中TUpdate类属性中取， 行版本=行版本+1，不包括主键，忽略，序列
+        /// Where子句 会是主键+行版本？ (故建议entitie中包括行版本列）
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <typeparam name="TUpdate"></typeparam>
+        /// <param name="entities">列表值，建议包括行版本列</param>
+        /// <param name="typeHelper">表达式Heper 方便编译器推出TEntity类， 这样TUpdate可以是匿名类型 (Yzn.MutiKeyTest x) => true</param>
+        /// <param name="checkWhere">检查更新条件是否空（空的话是更新全表，有可能有危险）</param>
+        /// <returns></returns>
         public override int UpdateRange<TEntity, TUpdate>(List<TUpdate> entities, Expression<Func<TEntity, bool>> typeHelper, bool checkWhere = true)
         {
             PublicHelper.CheckNull(entities);
@@ -226,6 +238,47 @@ namespace Chloe.Oracle
             }
             string sqlTemplate = sqlBuilder.ToString();
             return sqlTemplate;
+        }
+
+        /// <summary>
+        /// insert into a (f1,f2,f2) select c1,c2,c3 from b where b.score>70 <br/>
+        /// <br/>
+        /// db.InsertFrom((Yzn.MutiKeyTest x) =&gt; new { x.Pat, x.Visit, x.Desc },<br/>
+        ///    db.Query&lt;Yzn.MutiKeyTest&gt;() <br/>
+        ///                   .Where(x = &gt; x.CreateTime &gt; dNow) <br/>
+        ///                   .Select(x = &gt; new { x.Pat, x.Visit, x.Desc }));<br/>
+        /// </summary>
+        /// <typeparam name="TInsert">插入的表</typeparam>
+        /// <param name="insertCols">列表达式</param>
+        /// <param name="select"></param>
+        /// <returns></returns>
+        public override int InsertFrom<TInsert, TCols, TSelect>(Expression<Func<TInsert, TCols>> insertCols, IQuery<TSelect> select)
+        {
+            TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(typeof(TInsert));
+            List<string> cols = typeof(TCols).GetProperties().Select(x => x.Name).ToList(); ;
+            var colPropertyDescriptors = typeDescriptor.PrimitivePropertyDescriptors.Where(x => cols.Contains(x.Property.Name));
+            DbTable dbTableInsert = PublicHelper.CreateDbTable(typeDescriptor, null);
+
+            StringBuilder sqlBuilder = new StringBuilder("insert into ");
+            sqlBuilder.Append(this.AppendTableName(dbTableInsert));
+            sqlBuilder.Append(" ( ");
+            bool isFirst = true;
+            foreach (var propertyDescriptor in colPropertyDescriptors)
+            {
+                if (!isFirst)
+                {
+                    sqlBuilder.Append(", ");
+                }
+                else { isFirst = false; }
+                var colname = Utils.QuoteName(propertyDescriptor.Column.Name, ConvertToUppercase);
+                sqlBuilder.Append(colname);
+            }
+            sqlBuilder.Append(" ) ");
+            var selectCmd = select.GetDbCommandFactor();
+            sqlBuilder.Append(selectCmd.CommandText);
+            var sql = sqlBuilder.ToString();
+            var i = Session.ExecuteNonQuery(sql, selectCmd.Parameters);
+            return i;
         }
     }
 }

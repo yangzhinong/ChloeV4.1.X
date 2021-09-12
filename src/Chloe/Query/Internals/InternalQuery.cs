@@ -16,16 +16,16 @@ using System.Text;
 
 namespace Chloe.Query.Internals
 {
-    class InternalQuery<T> : IEnumerable<T>, IEnumerable
+    internal class InternalQuery<T> : IEnumerable<T>, IEnumerable
     {
-        Query<T> _query;
+        private Query<T> _query;
 
         internal InternalQuery(Query<T> query)
         {
             this._query = query;
         }
 
-        DbCommandFactor GenerateCommandFactor()
+        public DbCommandFactor GenerateCommandFactor()
         {
             IQueryState qs = QueryExpressionResolver.Resolve(this._query.QueryExpression, new ScopeParameterDictionary(), new StringSet());
             MappingData data = qs.GenerateMappingData();
@@ -62,6 +62,7 @@ namespace Chloe.Query.Internals
             });
             return enumerator;
         }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
@@ -73,7 +74,7 @@ namespace Chloe.Query.Internals
             return AppendDbCommandInfo(commandFactor.CommandText, commandFactor.Parameters);
         }
 
-        static string AppendDbCommandInfo(string cmdText, DbParam[] parameters)
+        private static string AppendDbCommandInfo(string cmdText, DbParam[] parameters)
         {
             StringBuilder sb = new StringBuilder();
             if (parameters != null)
@@ -112,7 +113,8 @@ namespace Chloe.Query.Internals
 
             return sb.ToString();
         }
-        static string GetTypeName(Type type)
+
+        private static string GetTypeName(Type type)
         {
             Type underlyingType;
             if (ReflectionExtension.IsNullable(type, out underlyingType))

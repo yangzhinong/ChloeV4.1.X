@@ -31,5 +31,7 @@ namespace ChloeDemo.Yzn
 
         [Column(IsRowVersion = true)]
         public int RowVersion { get; set; }
+
+        public DateTime? CreateTime { get; set; }
     }
 }

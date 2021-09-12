@@ -1,4 +1,5 @@
-﻿using Chloe.Descriptors;
+﻿using Chloe.Core;
+using Chloe.Descriptors;
 using Chloe.Infrastructure;
 using Chloe.Query.Internals;
 using Chloe.Query.QueryExpressions;
@@ -512,6 +513,11 @@ namespace Chloe.Query
         {
             InternalQuery<T> internalQuery = this.GenerateIterator();
             return internalQuery.ToString();
+        }
+
+        public DbCommandFactor GetDbCommandFactor()
+        {
+            return (new InternalQuery<T>(this)).GenerateCommandFactor();
         }
     }
 }
