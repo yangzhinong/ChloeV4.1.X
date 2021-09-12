@@ -1,13 +1,14 @@
 ﻿using Chloe.Infrastructure;
 using System;
+using System.Collections;
 using System.Data;
 
 namespace Chloe.Oracle
 {
-    class DatabaseProvider : IDatabaseProvider
+    partial class DatabaseProvider : IDatabaseProvider
     {
-        IDbConnectionFactory _dbConnectionFactory;
-        OracleContext _oracleContext;
+        private IDbConnectionFactory _dbConnectionFactory;
+        private OracleContext _oracleContext;
 
         public string DatabaseType { get { return "Oracle"; } }
 
@@ -16,11 +17,13 @@ namespace Chloe.Oracle
             this._dbConnectionFactory = dbConnectionFactory;
             this._oracleContext = oracleContext;
         }
+
         public IDbConnection CreateConnection()
         {
             IDbConnection conn = this._dbConnectionFactory.CreateConnection();
             return conn;
         }
+
         public IDbExpressionTranslator CreateDbExpressionTranslator()
         {
             if (this._oracleContext.ConvertToUppercase == true)
@@ -32,6 +35,7 @@ namespace Chloe.Oracle
                 return DbExpressionTranslator.Instance;
             }
         }
+
         public string CreateParameterName(string name)
         {
             if (string.IsNullOrEmpty(name))

@@ -27,9 +27,9 @@ namespace ChloeDemo
 
             {
                 //多关键字测试
-                o.DropTable<Yzn.MutiKeyTest>();
-                //o.InitTable<Yzn.MutiKeyTest>();
-                o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
+                //o.DropTable<Yzn.MutiKeyTest>();
+                ////o.InitTable<Yzn.MutiKeyTest>();
+                //o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
 
                 //var q = db.Query<Yzn.MutiKeyTest>().Select(x => Sql.Count()).ToList();
                 //context.Insert(new Yzn.MutiKeyTest()
@@ -52,11 +52,14 @@ namespace ChloeDemo
                 //});
                 var u = new User() { Id = 2, Name = "yzn" };
                 var dNow = DateTime.Now.AddDays(-3);
+                var dd = db.Query<Yzn.MutiKeyTest>().As("a").Where(x => x.Visit > 5)
+                           .GroupBy(x => x.Pat)
+                           .Select(x => new { x.Pat, cnt = Sql.Count() }).ToString();
                 //var sqlSelect = db.Query<Yzn.MutiKeyTest>().Where(x => x.Pat == u.Name && x.CreateTime < dNow)
                 //                  .Select(x => new { key = x.Pat, NewId = 1 }).ToString();
 
                 db.InsertFrom((Yzn.MutiKeyTest x) => new { x.Pat, x.Visit, x.Desc },
-                     db.Query<Yzn.MutiKeyTest>()
+                     db.Query<Yzn.MutiKeyTest>().As("b")
                        .Where(x => x.CreateTime > dNow)
                        .Select(x => new { x.Pat, x.Visit, x.Desc }));
 
@@ -111,7 +114,7 @@ namespace ChloeDemo
 
         public static void BasicQuery()
         {
-            IQuery<User> q = db.Query<User>();
+            IQuery<User> q = db.Query<User>().As("u");
             var ccc = q.Select(a => Sql.NextValueForSequence<int>("USERS_AUTOID", null)).AsTracking().ToList();
             var x = q.Where(a => a.Id >= GetUser().Id).ToList();
             db.TrackEntity(x);
@@ -173,7 +176,7 @@ namespace ChloeDemo
 
         public static void JoinQuery()
         {
-            var user_city_province = db.Query<User>()
+            var user_city_province = db.Query<User>().As("u")
                                      .InnerJoin<City>((user, city) => user.CityId == city.Id)
                                      .InnerJoin<Province>((user, city, province) => city.ProvinceId == province.Id);
 

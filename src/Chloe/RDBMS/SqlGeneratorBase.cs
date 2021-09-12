@@ -15,5 +15,7 @@ namespace Chloe.RDBMS
         }
 
         public ISqlBuilder SqlBuilder { get { return this._sqlBuilder; } }
+
+        public virtual List<string> GetDbKeyWords() => new List<string>();
     }
 }

@@ -405,7 +405,14 @@ namespace Chloe.Oracle
             }
             else
             {
-                this.QuoteName(exp.Table.Name);
+                if (exp.Table.IsAlias)
+                {
+                    this.SqlBuilder.Append(exp.Table.Name);
+                }
+                else
+                {
+                    this.QuoteName(exp.Table.Name);
+                }
                 this.SqlBuilder.Append(".");
                 this.QuoteName(exp.Column.Name);
             }
@@ -952,12 +959,20 @@ namespace Chloe.Oracle
         {
             seg.Body.Accept(this);
             this.SqlBuilder.Append(" ");
-            this.QuoteName(seg.Alias);
+            this.SqlBuilder.Append(seg.Alias);
+            //this.QuoteName(seg.Alias);
         }
 
         private void AppendColumnSegment(DbColumnSegment seg)
         {
             DbValueExpressionTransformer.Transform(seg.Body).Accept(this);
+            if (seg.Body is DbColumnAccessExpression col)
+            {
+                if (col.Column.Name.ToUpper() == seg.Alias.ToUpper())
+                {
+                    return;
+                }
+            }
             this.SqlBuilder.Append(" AS ");
             this.QuoteName(seg.Alias);
         }
@@ -1090,7 +1105,15 @@ namespace Chloe.Oracle
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
 
-            this.SqlBuilder.Append("\"", this.SqlName(name), "\"");
+            if (GetDbKeyWords().BinarySearch(name.ToUpper()) < 0 &&
+                            name.IndexOf(" ") < 0)
+            {
+                this.SqlBuilder.Append(name);
+            }
+            else
+            {
+                this.SqlBuilder.Append("\"", this.SqlName(name.ToUpper()), "\"");
+            }
         }
 
         private void AppendTable(DbTable table)

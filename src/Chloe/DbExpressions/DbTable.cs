@@ -2,16 +2,19 @@
 
 namespace Chloe.DbExpressions
 {
-    [System.Diagnostics.DebuggerDisplay("Name = {Name}")]
+    [System.Diagnostics.DebuggerDisplay("Name = {Name} isAlias={IsAlias}")]
     public class DbTable
     {
-        string _name;
-        string _schema;
-        public DbTable(string name)
-            : this(name, null)
+        private string _name;
+        private string _schema;
+        private bool _isAlias;
+
+        public DbTable(string name, bool isAlias = false)
+            : this(name, null, isAlias)
         {
         }
-        public DbTable(string name, string schema)
+
+        public DbTable(string name, string schema, bool isAlias = false)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -20,9 +23,12 @@ namespace Chloe.DbExpressions
 
             this._name = name;
             this._schema = schema;
+            this._isAlias = isAlias;
         }
 
         public string Name { get { return this._name; } }
         public string Schema { get { return this._schema; } }
+
+        public bool IsAlias { get => _isAlias; }
     }
 }

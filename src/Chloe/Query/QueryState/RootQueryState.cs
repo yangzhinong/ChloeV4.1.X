@@ -14,10 +14,12 @@ namespace Chloe.Query.QueryState
 {
     internal sealed class RootQueryState : QueryStateBase
     {
-        RootQueryExpression _rootQueryExp;
+        private RootQueryExpression _rootQueryExp;
+
         public RootQueryState(RootQueryExpression rootQueryExp, ScopeParameterDictionary scopeParameters, StringSet scopeTables) : this(rootQueryExp, scopeParameters, scopeTables, null)
         {
         }
+
         public RootQueryState(RootQueryExpression rootQueryExp, ScopeParameterDictionary scopeParameters, StringSet scopeTables, Func<string, string> tableAliasGenerator)
           : base(CreateQueryModel(rootQueryExp, scopeParameters, scopeTables, tableAliasGenerator))
         {
@@ -46,6 +48,7 @@ namespace Chloe.Query.QueryState
 
             return this;
         }
+
         public override IQueryState Accept(IgnoreAllFiltersExpression exp)
         {
             this.QueryModel.IgnoreFilters = true;
@@ -75,7 +78,7 @@ namespace Chloe.Query.QueryState
             return result;
         }
 
-        static QueryModel CreateQueryModel(RootQueryExpression rootQueryExp, ScopeParameterDictionary scopeParameters, StringSet scopeTables, Func<string, string> tableAliasGenerator)
+        private static QueryModel CreateQueryModel(RootQueryExpression rootQueryExp, ScopeParameterDictionary scopeParameters, StringSet scopeTables, Func<string, string> tableAliasGenerator)
         {
             Type entityType = rootQueryExp.ElementType;
 
@@ -90,12 +93,17 @@ namespace Chloe.Query.QueryState
             string alias = null;
             if (tableAliasGenerator != null)
                 alias = tableAliasGenerator(dbTable.Name);
+            else if (!string.IsNullOrWhiteSpace(rootQueryExp.AliasTable))
+            {
+                alias = queryModel.GenerateUniqueTableAlias(rootQueryExp.AliasTable);
+            }
             else
+            {
                 alias = queryModel.GenerateUniqueTableAlias(dbTable.Name);
-
+            }
             queryModel.FromTable = CreateRootTable(dbTable, alias, rootQueryExp.Lock);
 
-            DbTable aliasTable = new DbTable(alias);
+            DbTable aliasTable = new DbTable(alias, isAlias: true);
             ComplexObjectModel model = typeDescriptor.GenObjectModel(aliasTable);
             model.DependentTable = queryModel.FromTable;
 
@@ -105,14 +113,16 @@ namespace Chloe.Query.QueryState
 
             return queryModel;
         }
-        static DbFromTableExpression CreateRootTable(DbTable table, string alias, LockType lockType)
+
+        private static DbFromTableExpression CreateRootTable(DbTable table, string alias, LockType lockType)
         {
             DbTableExpression tableExp = new DbTableExpression(table);
             DbTableSegment tableSeg = new DbTableSegment(tableExp, alias, lockType);
             var fromTableExp = new DbFromTableExpression(tableSeg);
             return fromTableExp;
         }
-        static void ParseFilters(QueryModel queryModel, IList<LambdaExpression> globalFilters, IList<LambdaExpression> contextFilters)
+
+        private static void ParseFilters(QueryModel queryModel, IList<LambdaExpression> globalFilters, IList<LambdaExpression> contextFilters)
         {
             for (int i = 0; i < globalFilters.Count; i++)
             {
@@ -124,7 +134,8 @@ namespace Chloe.Query.QueryState
                 queryModel.ContextFilters.Add(ParseFilter(queryModel, contextFilters[i]));
             }
         }
-        static DbExpression ParseFilter(QueryModel queryModel, LambdaExpression filter)
+
+        private static DbExpression ParseFilter(QueryModel queryModel, LambdaExpression filter)
         {
             ScopeParameterDictionary scopeParameters = queryModel.ScopeParameters.Clone(filter.Parameters[0], queryModel.ResultModel);
             DbExpression filterCondition = FilterPredicateParser.Parse(filter, scopeParameters, queryModel.ScopeTables);

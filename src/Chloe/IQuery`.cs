@@ -29,6 +29,8 @@ namespace Chloe
 
         IQuery<T> Take(int count);
 
+        IQuery<T> As(string alias);
+
         IQuery<T> TakePage(int pageNumber, int pageSize);
 
         IGroupingQuery<T> GroupBy<K>(Expression<Func<T, K>> keySelector);

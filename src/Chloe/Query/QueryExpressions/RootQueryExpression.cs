@@ -13,6 +13,7 @@ namespace Chloe.Query.QueryExpressions
             this.Lock = @lock;
         }
         public string ExplicitTable { get; private set; }
+        public string AliasTable { get; set; }
         public LockType Lock { get; private set; }
         public List<LambdaExpression> ContextFilters { get; private set; } = new List<LambdaExpression>();
         public override T Accept<T>(QueryExpressionVisitor<T> visitor)

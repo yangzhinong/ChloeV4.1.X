@@ -519,5 +519,14 @@ namespace Chloe.Query
         {
             return (new InternalQuery<T>(this)).GenerateCommandFactor();
         }
+
+        public IQuery<T> As(string alias)
+        {
+            if (this._expression is RootQueryExpression exp)
+            {
+                exp.AliasTable = alias;
+            }
+            return this;
+        }
     }
 }
