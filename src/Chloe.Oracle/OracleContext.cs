@@ -99,7 +99,9 @@ namespace Chloe.Oracle
             e.Returns.AddRange(outputColumns.Select(a => a.Column));
 
             List<DbParam> parameters;
-            this.ExecuteNonQuery(e, out parameters);
+
+            var rowsAffected = this.ExecuteNonQuery(e, out parameters);
+            if (rowsAffected < 1) throw new ChloeException($"未正确把数据插入数到表: {dbTable.Name}, 返回0条!");
 
             List<DbParam> outputParams = parameters.Where(a => a.Direction == ParamDirection.Output).ToList();
 
@@ -201,7 +203,8 @@ namespace Chloe.Oracle
             }
 
             List<DbParam> parameters;
-            this.ExecuteNonQuery(insertExp, out parameters);
+            var rowsAffected = this.ExecuteNonQuery(insertExp, out parameters);
+            if (rowsAffected < 1) throw new ChloeException($"未正确把数据插入数到表: {dbTable.Name}, 返回0条!");
             List<object> retList = new List<object>();
             if (keyPropertyDescriptors.Count > 0)
             {
