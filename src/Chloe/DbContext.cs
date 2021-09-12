@@ -532,7 +532,6 @@ namespace Chloe
             DefaultExpressionParser expressionParser = typeDescriptor.GetExpressionParser(explicitDbTable);
 
             DbExpression conditionExp = expressionParser.ParseFilterPredicate(condition);
-            object rowVersionNewValue = null;
             if (updateColumns.Any(x => typeDescriptor.GetPrimitivePropertyDescriptor(x.Key).IsRowVersion))
             {
                 var kvRowVersion = updateColumns.Where(x => typeDescriptor.GetPrimitivePropertyDescriptor(x.Key).IsRowVersion).First();
@@ -540,8 +539,8 @@ namespace Chloe
                 var delfunc = content.Compile();
 
                 var obj = delfunc(default(TEntity));
-                var rowVersionOldValue = typeof(TEntity).GetProperty(rowVersionDescriptor.Property.Name).GetValue(obj, null); //todo
-                rowVersionNewValue = PublicHelper.IncreaseRowVersionNumber(rowVersionOldValue);
+                var rowVersionOldValue = typeof(TEntity).GetProperty(rowVersionDescriptor.Property.Name).GetValue(obj, null); 
+
                 DbExpression right = DbExpression.Constant(rowVersionOldValue, rowVersionDescriptor.PropertyType);
                 DbExpression left = new DbColumnAccessExpression(explicitDbTable, rowVersionDescriptor.Column);
                 DbExpression equalExp = new DbEqualExpression(left, right);
@@ -565,27 +564,18 @@ namespace Chloe
                 }
                 if (propertyDescriptor.IsRowVersion)
                 {
-                    var rowVersionDescriptor = typeDescriptor.RowVersion;
-                    e.UpdateColumns.Add(propertyDescriptor.Column,
-                        DbExpression.Parameter(rowVersionNewValue,
-                                    rowVersionDescriptor.PropertyType, rowVersionDescriptor.Column.DbType));
+                    continue;
                 }
-                else
-                {
-                    e.UpdateColumns.Add(propertyDescriptor.Column, expressionParser.Parse(kv.Value));
-                }
+                e.UpdateColumns.Add(propertyDescriptor.Column, expressionParser.Parse(kv.Value));
             }
 
-            if (typeDescriptor.HasRowVersion() && rowVersionNewValue == null)
+            if (typeDescriptor.HasRowVersion())
             {
                 var rowVersionDescriptor = typeDescriptor.RowVersion;
                 e.UpdateColumns.Add(rowVersionDescriptor.Column,
-                    new DbMethodCallExpression(null,
-                        PublicConstants.MethodInfo_Sql_NextRowVersion,
-                        new List<DbExpression>()
-                        {
-                            new DbColumnAccessExpression(explicitDbTable , rowVersionDescriptor.Column)
-                        }));
+                            new DbAddExpression(rowVersionDescriptor.PropertyType,
+                                new DbColumnAccessExpression(explicitDbTable, rowVersionDescriptor.Column),
+                                new DbConstantExpression(1, rowVersionDescriptor.PropertyType), null));
             }
 
             if (e.UpdateColumns.Count == 0)
