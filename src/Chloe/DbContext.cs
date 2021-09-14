@@ -539,7 +539,7 @@ namespace Chloe
                 var delfunc = content.Compile();
 
                 var obj = delfunc(default(TEntity));
-                var rowVersionOldValue = typeof(TEntity).GetProperty(rowVersionDescriptor.Property.Name).GetValue(obj, null); 
+                var rowVersionOldValue = typeof(TEntity).GetProperty(rowVersionDescriptor.Property.Name).GetValue(obj, null);
 
                 DbExpression right = DbExpression.Constant(rowVersionOldValue, rowVersionDescriptor.PropertyType);
                 DbExpression left = new DbColumnAccessExpression(explicitDbTable, rowVersionDescriptor.Column);

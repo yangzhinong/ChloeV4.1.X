@@ -55,6 +55,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="SqlFormatter">
+      <HintPath>Dll\SqlFormatter.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
   </ItemGroup>
 </Project>

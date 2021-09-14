@@ -26,6 +26,7 @@ namespace ChloeDemo
             //o.InitTable<Insur_Country_Dict>();
 
             {
+                JoinQuery();
                 //多关键字测试
                 //o.DropTable<Yzn.MutiKeyTest>();
                 ////o.InitTable<Yzn.MutiKeyTest>();
@@ -91,7 +92,7 @@ namespace ChloeDemo
             }
             Yzn.BoolTest.Run(db);
             BasicQuery();
-            JoinQuery();
+
             AggregateQuery();
             GroupQuery();
             ComplexQuery();
@@ -176,12 +177,13 @@ namespace ChloeDemo
 
         public static void JoinQuery()
         {
-            var user_city_province = db.Query<User>().As("u")
-                                     .InnerJoin<City>((user, city) => user.CityId == city.Id)
-                                     .InnerJoin<Province>((user, city, province) => city.ProvinceId == province.Id);
-
+            var user_city_province = db.Query<User>()
+                                     .LeftJoin<City>((u, c) => u.CityId == c.Id)
+                                     .InnerJoin<Province>((u, c, p) => c.ProvinceId == p.Id);
+            var lst = user_city_province.Where((x, c, p) => x.Id > 1)
+                                        .Select((u, c, y) => new { u.Id, y.Name }).ToList();
             //查出一个用户及其隶属的城市和省份的所有信息
-            var view = user_city_province.Select((user, city, province) => new { User = user, City = city, Province = province }).Where(a => a.User.Id > 1).ToList();
+            var view = user_city_province.Select((u, c, p) => new { User = u, City = c, Province = p }).Where(a => a.User.Id > 1).ToList();
             /*
              * SELECT "USERS"."ID" AS "ID","USERS"."NAME" AS "NAME","USERS"."GENDER" AS "GENDER","USERS"."AGE" AS "AGE","USERS"."CITYID" AS "CITYID","USERS"."OPTIME" AS "OPTIME","CITY"."ID" AS "ID0","CITY"."NAME" AS "NAME0","CITY"."PROVINCEID" AS "PROVINCEID","PROVINCE"."ID" AS "ID1","PROVINCE"."NAME" AS "NAME1" FROM "USERS" "USERS" INNER JOIN "CITY" "CITY" ON "USERS"."CITYID" = "CITY"."ID" INNER JOIN "PROVINCE" "PROVINCE" ON "CITY"."PROVINCEID" = "PROVINCE"."ID" WHERE "USERS"."ID" > 1
              */
@@ -193,9 +195,9 @@ namespace ChloeDemo
              */
 
             /* quick join and paging. */
-            db.JoinQuery<User, City>((user, city) => new object[]
+            db.JoinQuery<User, City>((u, c) => new object[]
             {
-                JoinType.LeftJoin, user.CityId == city.Id
+                JoinType.LeftJoin, u.CityId == c.Id
             })
             .Select((user, city) => new { User = user, City = city })
             .Where(a => a.User.Id > -1)
@@ -203,10 +205,10 @@ namespace ChloeDemo
             .TakePage(1, 20)
             .ToList();
 
-            db.JoinQuery<User, City, Province>((user, city, province) => new object[]
+            db.JoinQuery<User, City, Province>((u, c, p) => new object[]
             {
-                JoinType.LeftJoin, user.CityId == city.Id,          /* 表 User 和 City 进行Left连接 */
-                JoinType.LeftJoin, city.ProvinceId == province.Id   /* 表 City 和 Province 进行Left连接 */
+                JoinType.LeftJoin, u.CityId == c.Id,          /* 表 User 和 City 进行Left连接 */
+                JoinType.LeftJoin, c.ProvinceId == p.Id   /* 表 City 和 Province 进行Left连接 */
             })
             .Select((user, city, province) => new { User = user, City = city, Province = province })   /* 投影成匿名对象 */
             .Where(a => a.User.Id > -1)     /* 进行条件过滤 */

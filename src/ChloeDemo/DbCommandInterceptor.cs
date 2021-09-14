@@ -124,7 +124,6 @@ namespace ChloeDemo
 
                 sb.AppendFormat("{3} {0} {1} = {2};", Enum.GetName(typeof(DbType), param.DbType), param.ParameterName, value, Enum.GetName(typeof(ParameterDirection), param.Direction));
             }
-
             sb.Append(command.CommandText);
 
             return sb.ToString();

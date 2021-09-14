@@ -92,7 +92,14 @@ namespace Chloe.Query.QueryState
             DbTable dbTable = typeDescriptor.GenDbTable(rootQueryExp.ExplicitTable);
             string alias = null;
             if (tableAliasGenerator != null)
-                alias = tableAliasGenerator(dbTable.Name);
+                if (!string.IsNullOrWhiteSpace(rootQueryExp.AliasTable))
+                {
+                    alias = tableAliasGenerator(rootQueryExp.AliasTable);
+                }
+                else
+                {
+                    alias = tableAliasGenerator(dbTable.Name);
+                }
             else if (!string.IsNullOrWhiteSpace(rootQueryExp.AliasTable))
             {
                 alias = queryModel.GenerateUniqueTableAlias(rootQueryExp.AliasTable);
