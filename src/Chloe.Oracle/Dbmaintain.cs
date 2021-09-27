@@ -40,7 +40,31 @@ namespace Chloe.Oracle
                     var sql = $"COMMENT ON COLUMN {schcmeTable}.{colName} IS '{SafeSqlString(desc)}'";
                     sqlList.Add(sql);
                 }
+                var idx = prop.GetCustomAttribute<IndexAttribute>();
+                if (idx != null)
+                {
+                    var idxName = idx.IdxName;
+                    if (string.IsNullOrWhiteSpace(idx.IdxName))
+                    {
+                        idxName = ("Idx_" + tableName + "_" + colName);
+                    }
+
+                    var sql = $"CREATE INDEX {idxName} ON {QuoteSchemaAndName(schcmeName, tableName)} ({colName})";
+                    sqlList.Add(sql);
+                }
             }
+            try
+            {
+                var idxs = entityType.GetCustomAttributes<IndexAttribute>();
+                var i = 0;
+                foreach (var idx in idxs)
+                {
+                    var idxName = string.IsNullOrEmpty(idx.IdxName) ? (idx.IdxName) : ("Idx_" + tableName + $"{i++}");
+                    var sql = $"CREATE INDEX {idx.IdxName} ON {QuoteSchemaAndName(schcmeName, tableName)} ({string.Join(",", idx.ColNames)})";
+                    sqlList.Add(sql);
+                }
+            }
+            catch { }
 
             foreach (var sql in sqlList)
             {
