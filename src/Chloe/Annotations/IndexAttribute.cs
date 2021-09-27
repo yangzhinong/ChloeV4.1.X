@@ -7,6 +7,7 @@ namespace Chloe.Annotations
 {
     public class IndexAttribute : Attribute
     {
+        public const string Prefix = "Idx";
         public string[] ColNames { get; }
 
         /// <summary>
@@ -14,7 +15,11 @@ namespace Chloe.Annotations
         /// </summary>
         public string IdxName { get; }
 
-        public IndexAttribute(string indexName = "", params string[] colNames)
+        public IndexAttribute()
+        {
+        }
+
+        public IndexAttribute(string indexName, params string[] colNames)
         {
             IdxName = indexName;
             ColNames = colNames;

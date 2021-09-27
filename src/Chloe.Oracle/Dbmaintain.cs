@@ -29,6 +29,8 @@ namespace Chloe.Oracle
             TypeDescriptor typeDescriptor = EntityTypeContainer.GetDescriptor(entityType);
             string tableName = typeDescriptor.Table.Name;
             string schcmeName = typeDescriptor.Table.Schema;
+            //var shortTableName = GetShortTableName(tableName);
+            var iCol = 0;
             foreach (var propertyDescriptor in typeDescriptor.PrimitivePropertyDescriptors)
             {
                 var colName = propertyDescriptor.Column.Name.ToUpper();
@@ -41,17 +43,15 @@ namespace Chloe.Oracle
                     sqlList.Add(sql);
                 }
                 var idx = prop.GetCustomAttribute<IndexAttribute>();
+
                 if (idx != null)
                 {
-                    var idxName = idx.IdxName;
-                    if (string.IsNullOrWhiteSpace(idx.IdxName))
-                    {
-                        idxName = ("Idx_" + tableName + "_" + colName);
-                    }
-
-                    var sql = $"CREATE INDEX {idxName} ON {QuoteSchemaAndName(schcmeName, tableName)} ({colName})";
+                    var idxName = string.IsNullOrEmpty(idx.IdxName) ? (tableName + $"{iCol:000}") : (idx.IdxName);
+                    idxName = EnsurePrefix(idxName, IndexAttribute.Prefix);
+                    var sql = $"CREATE INDEX {QuoteSchemaAndName(schcmeName, idxName)} ON {QuoteSchemaAndName(schcmeName, tableName)} ({colName})";
                     sqlList.Add(sql);
                 }
+                iCol++;
             }
             try
             {
@@ -59,8 +59,9 @@ namespace Chloe.Oracle
                 var i = 0;
                 foreach (var idx in idxs)
                 {
-                    var idxName = string.IsNullOrEmpty(idx.IdxName) ? (idx.IdxName) : ("Idx_" + tableName + $"{i++}");
-                    var sql = $"CREATE INDEX {idx.IdxName} ON {QuoteSchemaAndName(schcmeName, tableName)} ({string.Join(",", idx.ColNames)})";
+                    var idxName = string.IsNullOrEmpty(idx.IdxName) ? (tableName + $"{i++}") : (idx.IdxName);
+                    idxName = EnsurePrefix(idxName, IndexAttribute.Prefix);
+                    var sql = $"CREATE INDEX {QuoteSchemaAndName(schcmeName, idxName)} ON {QuoteSchemaAndName(schcmeName, tableName)} ({string.Join(",", idx.ColNames)})";
                     sqlList.Add(sql);
                 }
             }
@@ -69,6 +70,30 @@ namespace Chloe.Oracle
             foreach (var sql in sqlList)
             {
                 this._db.Session.ExecuteNonQuery(sql);
+            }
+        }
+
+        private static string EnsurePrefix(string s, string prefix)
+        {
+            if (!string.IsNullOrWhiteSpace(s) && !s.StartsWith(prefix))
+            {
+                return prefix + s;
+            }
+            return s;
+        }
+
+        private static string GetShortTableName(string tableName)
+        {
+            if (tableName.IndexOf("_") > -1)
+            {
+                return string.Join("", tableName.Split('_')
+                             .Select(x => x.Substring(0, 1).ToUpper()
+                                        + ((x.Length > 1) ? x.Substring(1, 1).ToLower() : "")
+                             ));
+            }
+            else
+            {
+                return tableName;
             }
         }
 
