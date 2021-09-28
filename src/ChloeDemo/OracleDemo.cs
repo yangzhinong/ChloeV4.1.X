@@ -23,14 +23,24 @@ namespace ChloeDemo
             db.NonParamSQL = true; //生成无参的SQL
             var o = db.Dbmaintain();
             //o.DropTable<Insur_Country_Dict>();
+
+            //{
+            //    o.DropTable<Yzn.YznIdex1>();
+            //    o.DropTable<Yzn.YznIdex2>();
+            //    o.DropTable<Yzn.YznIdex3>();
+            //    o.SafteInitTablbeAndColumns<Yzn.YznIdex1>();
+            //    o.SafteInitTablbeAndColumns<Yzn.YznIdex2>();
+            //    o.SafteInitTablbeAndColumns<Yzn.YznIdex3>();
+            //}
             //o.InitTable<Insur_Country_Dict>();
 
             {
+                Method();
                 JoinQuery();
                 //多关键字测试
-                //o.DropTable<Yzn.MutiKeyTest>();
-                ////o.InitTable<Yzn.MutiKeyTest>();
-                //o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
+                o.DropTable<Yzn.MutiKeyTest>();
+                //o.InitTable<Yzn.MutiKeyTest>();
+                o.SafteInitTablbeAndColumns<Yzn.MutiKeyTest>();
 
                 //var q = db.Query<Yzn.MutiKeyTest>().Select(x => Sql.Count()).ToList();
                 //context.Insert(new Yzn.MutiKeyTest()
@@ -501,12 +511,14 @@ namespace ChloeDemo
             {
                 AddDays = startTime.AddDays(1)
             }).ToList();
+            var ret2 = q.Select(a => new { xx = OracleFuns.Decode(a.Id, 5, "Hello", "No") }).ToList();
+            var ret3 = q.Select(a => new { xx = OracleFuns.Decode(a.Id, 5, "Hello", 6, "No", "ok") }).ToList();
             var ret = q.Select(a => new
             {
                 Id = a.Id,
 
-                CustomFunction = DbFunctions.MyFunction(a.Id), //自定义函数
-
+                //CustomFunction = DbFunctions.MyFunction(a.Id), //自定义函数
+                xx = OracleFuns.Decode(a.Id, 5, "Helo", "no"),
                 String_Length = (int?)a.Name.Length,//LENGTH("USERS"."NAME")
                 Substring = a.Name.Substring(0),//SUBSTR("USERS"."NAME",0 + 1,LENGTH("USERS"."NAME"))
                 Substring1 = a.Name.Substring(1),//SUBSTR("USERS"."NAME",1 + 1,LENGTH("USERS"."NAME"))
