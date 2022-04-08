@@ -1,3 +1,7 @@
+# 关于此版本
+这是一个从 https://github.com/shuxinqin/Chloe/ 克隆项目, 由于原作者不再支持DotNet4.0 <br/>
+并且由于我只需要支持Oracle就可以了, 所以我建了一个分支,同步了部分原作者的一部分功能. 并删除了其它数据库支持. 同时加入一些自已要要的功能, 如生成sql代码优化, 表别名规则.更多修改,请看代码提交记录
+
 # Chloe
 Chloe is a lightweight Object/Relational Mapping(ORM) library.
 The query interface is similar to LINQ.You can query data like LINQ and do any things(Join Query | Group Query | Aggregate Query | Insert | Batch Update | Batch Delete) by lambda with Chloe.ORM.
